@@ -128,3 +128,15 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# MongoDB (if using local instance)
+data/db/
+dump/
+
+# IDE/editor-specific files
+.vscode/
+.idea/
+
+# Tailwind & PostCSS
+tailwind.config.js
+postcss.config.js
