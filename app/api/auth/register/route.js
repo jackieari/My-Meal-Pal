@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { connectToDatabase } from "@/lib/mongodb"; // ✅ FIXED: Named Import
+import { connectToDatabase } from "@/lib/mongodb"; 
 import User from "@/models/User";
 import bcrypt from "bcryptjs";
 
 export async function POST(req) {
   try {
-    await connectToDatabase(); // ✅ Ensure MongoDB connection
+    await connectToDatabase(); //  Ensure MongoDB connection
 
     const { name, email, password, nutritionalPreferences } = await req.json();
 
