@@ -1,38 +1,37 @@
 import { NextResponse } from "next/server";
-import { connectToDatabase } from "@/lib/mongodb"; 
+import { connectToDatabase } from "@/lib/mongodb";
 import User from "@/models/User";
 import bcrypt from "bcryptjs";
 
 export async function POST(req) {
   try {
-    await connectToDatabase(); //  Ensure MongoDB connection
+    await connectToDatabase();
 
-    const { name, email, password, nutritionalPreferences } = await req.json();
+    const { name, email, password } = await req.json();
 
-    if (!name || !email || !password) {
-      return NextResponse.json({ message: "All fields are required" }, { status: 400 });
-    }
-
+    // Check if the user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return NextResponse.json({ message: "User already exists" }, { status: 400 });
+      return NextResponse.json({ message: "Email already in use" }, { status: 400 });
     }
 
-    // Hash the password
-    const passwordHash = await bcrypt.hash(password, 10);
+    // Hash the password before saving
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create new user
+    // Create a new user
     const newUser = new User({
       name,
       email,
-      passwordHash, // Save hashed password in the correct field
-      nutritionalPreferences: nutritionalPreferences || {} // Store nutritional preferences if provided
+      passwordHash: hashedPassword,
     });
 
+    // Save the user to the database
     await newUser.save();
 
+    // Return success response
     return NextResponse.json({ message: "User registered successfully" }, { status: 201 });
   } catch (error) {
-    return NextResponse.json({ message: "Internal Server Error", error: error.message }, { status: 500 });
+    console.error("Error during registration:", error.message);
+    return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
   }
 }
