@@ -116,7 +116,7 @@ function HomePage() {
     sessionStorage.removeItem("user")
 
     // Redirect to login page
-    router.push("/login")
+    router.push("/")
   }
 
   // Toggle settings dropdown
