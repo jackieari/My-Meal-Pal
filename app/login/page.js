@@ -22,7 +22,7 @@ export default function LoginPage() {
 
             if (response.ok) {
                 // Redirect to profile or dashboard after successful login
-                window.location.href = '/profile'; 
+                window.location.href = '/home'; 
             } else {
                 const errorData = await response.json();
                 setError(errorData.message || 'Login failed');
