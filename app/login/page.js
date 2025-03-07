@@ -74,7 +74,7 @@ export default function LoginPage() {
         </form>
 
         <div className="text-center">
-          <Link href="/auth/register" className="text-blue-400 hover:underline">
+          <Link href="/register" className="text-blue-400 hover:underline">
             Need an account? Register
           </Link>
         </div>
