@@ -1,8 +1,10 @@
 import mongoose from "mongoose";
 
 const ImageSchema = new mongoose.Schema({
-  filename: { type: String, required: true },
-  imageUrl: { type: String, required: true }, // Assuming external storage, else use Buffer
-}, { timestamps: true });
+  name: { type: String, required: true },
+  date: { type: Date, default: Date.now },
+  image: { type: String, required: true }, // This should be a URL or Base64 string
+});
 
-export default mongoose.models.Image || mongoose.model("Image", ImageSchema);
+const Image = mongoose.models.Image || mongoose.model("Image", ImageSchema);
+export default Image;

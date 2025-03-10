@@ -133,7 +133,7 @@ export default function ProfilePage() {
             </form>
 
             <div className="flex gap-4 mt-6">
-                <Link href="/" className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                <Link href="/home" className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
                     Home
                 </Link>
                 <Link href="/settings" className="px-4 py-2 bg-purple-400 text-white rounded hover:bg-green-600">
