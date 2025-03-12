@@ -5,7 +5,7 @@ import Link from "next/link";
 
 export default function UploadFridgePage() {
     const [fridgeImages, setFridgeImages] = useState([]);
-    const [focusedImage, setFocusedImage] = useState(null);
+    const [selectedImages, setSelectedImages] = useState([]);
     const [userName, setUserName] = useState(""); // Store user's name here
     const router = useRouter();
 
@@ -13,18 +13,18 @@ export default function UploadFridgePage() {
     useEffect(() => {
         const fetchUserInfo = async () => {
             try {
-                const response = await fetch("/api/users/me", {  // Use the correct API endpoint to get user info
+                const response = await fetch("/api/users/me", {
                     method: "GET",
                     headers: {
                         "Content-Type": "application/json",
-                        Authorization: `Bearer ${document.cookie.replace("access-token=", "")}`,  // Assuming you have token-based authentication
+                        Authorization: `Bearer ${document.cookie.replace("access-token=", "")}`,
                     },
                 });
 
                 if (response.ok) {
                     const data = await response.json();
                     console.log("Fetched user data:", data);
-                    setUserName(data.user.name);  // Set the user name from the API response
+                    setUserName(data.user.name);
                 } else {
                     console.error("Failed to fetch user data");
                 }
@@ -39,35 +39,47 @@ export default function UploadFridgePage() {
     // Fetch fridge images for the user
     useEffect(() => {
         const fetchImages = async () => {
-            if (!userName) {
-                console.log("No user name set"); // Debugging line
-                return;
-            }
+            if (!userName) return;
 
             try {
-                const url = `/api/images?name=${userName}`;  // Correct API endpoint
-                console.log("Fetching images from URL:", url);  // Log the URL for debugging
-
+                const url = `/api/images?name=${userName}`;
                 const response = await fetch(url);
                 if (response.ok) {
                     const data = await response.json();
-                    console.log("Fetched images:", data); // Debugging line
                     setFridgeImages(data.images);
                 } else {
-                    console.error("Failed to fetch images"); // Log error
+                    console.error("Failed to fetch images");
                 }
             } catch (error) {
-                console.error("Error fetching images:", error); // Log error
+                console.error("Error fetching images:", error);
             }
         };
 
         fetchImages();
     }, [userName]);
 
+    // Toggle image selection
+    const toggleImageSelection = (img) => {
+        setSelectedImages((prevSelected) => {
+            if (prevSelected.includes(img)) {
+                return prevSelected.filter((image) => image !== img);
+            } else {
+                return [...prevSelected, img];
+            }
+        });
+    };
+
+    // Navigate to analysis page with selected images
+    const analyzeSelectedImages = () => {
+        if (selectedImages.length === 0) return;
+        const imageUrls = selectedImages.map((img) => encodeURIComponent(img.image)).join(",");
+        router.push(`/analyze-fridge?images=${imageUrls}`);
+    };
+
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-r from-blue-500 to-green-400 text-white p-6">
-            <h1 className="text-4xl font-extrabold mb-4">Select Fridge Image</h1>
-            <p className="text-lg mb-6">Choose an uploaded fridge image for analysis.</p>
+            <h1 className="text-4xl font-extrabold mb-4">Select Fridge Images</h1>
+            <p className="text-lg mb-6">Choose one or more fridge images for analysis.</p>
 
             {/* Image Selection Grid */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
@@ -77,9 +89,9 @@ export default function UploadFridgePage() {
                     fridgeImages.map((img, index) => (
                         <div
                             key={index}
-                            onClick={() => setFocusedImage(img)}
+                            onClick={() => toggleImageSelection(img)}
                             className={`border-4 rounded-lg overflow-hidden cursor-pointer transition ${
-                                focusedImage === img ? "border-yellow-400" : "border-transparent"
+                                selectedImages.includes(img) ? "border-yellow-400 scale-110 shadow-lg" : "border-transparent"
                             }`}
                         >
                             <img src={img.image} alt={`Fridge ${index}`} className="w-32 h-32 object-cover" />
@@ -88,16 +100,20 @@ export default function UploadFridgePage() {
                 )}
             </div>
 
-            {/* Focused Image Display */}
-            {focusedImage && (
-                <div className="mt-6">
-                    <p className="text-md font-semibold mb-2">Selected Image:</p>
-                    <img src={focusedImage.image} alt="Focused Fridge" className="w-64 h-64 object-cover rounded-lg shadow-xl border-4 border-white" />
+            {/* Selected Images Preview */}
+            {selectedImages.length > 0 && (
+                <div className="mt-6 p-4 bg-white bg-opacity-20 rounded-lg shadow-lg">
+                    <h2 className="text-lg font-semibold mb-2">Selected Images:</h2>
+                    <div className="flex flex-wrap gap-4">
+                        {selectedImages.map((img, index) => (
+                            <img key={index} src={img.image} alt="Selected Fridge" className="w-32 h-32 object-cover rounded-lg shadow-lg border-4 border-white" />
+                        ))}
+                    </div>
                     <button
-                        onClick={() => router.push(`/analyze-fridge?image=${encodeURIComponent(focusedImage.image)}`)}
+                        onClick={analyzeSelectedImages}
                         className="mt-4 px-6 py-3 bg-yellow-500 text-white font-semibold rounded-lg shadow-md hover:bg-yellow-600 transition"
                     >
-                        🔍 Analyze This Image
+                        🔍 Analyze Selected Images ({selectedImages.length})
                     </button>
                 </div>
             )}
