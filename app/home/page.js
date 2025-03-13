@@ -161,8 +161,11 @@ function HomePage() {
             <Link href="/meal-planner" className="text-white hover:text-blue-300">
               Meal Planner
             </Link>
-            <Link href="/nutrition" className="text-white hover:text-blue-300">
-              Nutrition
+            <Link href="/recipes" className="text-white hover:text-blue-300">
+              Recipes
+            </Link>
+            <Link href="/upload-fridge" className="text-white hover:text-blue-300">
+              Fridge Image Upload
             </Link>
 
             {/* Settings Icon */}
