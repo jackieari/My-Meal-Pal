@@ -1,4 +1,3 @@
-
 // models/User.js
 import mongoose from "mongoose";
 
@@ -12,6 +11,17 @@ const UserSchema = new mongoose.Schema(
       allergens: { type: [String], default: [] },
       calorieLimit: { type: Number, default: null },
     },
+    bodyMetrics: {
+      gender: { type: String, default: "female" },
+      dob: { type: String, default: "" },
+      currentWeight: { type: String, default: "" },
+      goalWeight: { type: String, default: "" },
+      heightFeet: { type: String, default: "5" },
+      heightInches: { type: String, default: "6" },
+      activityLevel: { type: String, default: "moderate" },
+      fitnessGoal: { type: String, default: "lose" },
+      weeklyGoal: { type: String, default: "1" },
+    }
   },
   { timestamps: true }
 );
