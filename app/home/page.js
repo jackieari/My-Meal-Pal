@@ -9,6 +9,7 @@ function HomePage() {
   // User state
   const [userName, setUserName] = useState("")
   const [dietaryRestrictions, setDietaryRestrictions] = useState([])
+  const [allergens, setAllergens] = useState([])
   const [calorieLimit, setCalorieLimit] = useState("")
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
@@ -88,6 +89,7 @@ function HomePage() {
           // Safely access nutritionalPreferences
           const nutritionalPrefs = data.user?.nutritionalPreferences || {}
           setDietaryRestrictions(nutritionalPrefs.dietaryRestrictions || [])
+          setAllergens(nutritionalPrefs.allergens || []) // Added this line to set allergens
           setCalorieLimit(nutritionalPrefs.calorieLimit || "")
         } else if (response.status === 401) {
           // Unauthorized - redirect to login
@@ -332,6 +334,26 @@ function HomePage() {
                   )}
                 </div>
                 <div>
+                  <p className="text-gray-400 mb-2">Food Allergens</p>
+                  {allergens && allergens.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {allergens.map((allergen, index) => (
+                        <span
+                          key={index}
+                          className="bg-blue-500 px-2 py-1 rounded-full text-xs"
+                        >
+                          {allergen.replace(/-/g, ' ')}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm">None specified</p>
+                  )}
+                </div>
+
+
+
+                <div>
                   <p className="text-gray-400">Daily Calorie Goal</p>
                   <p className="font-medium">{calorieLimit || "Not set"}</p>
                 </div>
@@ -389,22 +411,20 @@ function HomePage() {
                 <button
                   onClick={handleImageUpload}
                   disabled={!selectedImage}
-                  className={`w-full py-2 rounded transition duration-300 ${
-                    selectedImage ? "bg-blue-500 hover:bg-blue-600" : "bg-gray-700 cursor-not-allowed"
-                  }`}
+                  className={`w-full py-2 rounded transition duration-300 ${selectedImage ? "bg-blue-500 hover:bg-blue-600" : "bg-gray-700 cursor-not-allowed"
+                    }`}
                 >
                   Analyze Ingredients & Find Recipes
                 </button>
 
                 {uploadStatus && (
                   <p
-                    className={`text-sm text-center ${
-                      uploadStatus === "Uploading..."
-                        ? "text-yellow-400"
-                        : uploadStatus.includes("success")
-                          ? "text-green-400"
-                          : "text-red-400"
-                    }`}
+                    className={`text-sm text-center ${uploadStatus === "Uploading..."
+                      ? "text-yellow-400"
+                      : uploadStatus.includes("success")
+                        ? "text-green-400"
+                        : "text-red-400"
+                      }`}
                   >
                     {uploadStatus}
                   </p>
