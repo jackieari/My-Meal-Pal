@@ -11,6 +11,7 @@ function HomePage() {
   const [dietaryRestrictions, setDietaryRestrictions] = useState([])
   const [calorieLimit, setCalorieLimit] = useState("")
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
   const [settingsOpen, setSettingsOpen] = useState(false)
 
   // Image upload state
@@ -22,24 +23,88 @@ function HomePage() {
   useEffect(() => {
     const fetchUserInfo = async () => {
       try {
+        // Debug: Log all cookies to see what's available
+        console.log("All cookies:", document.cookie)
+
+        // Try different possible cookie names
+        let token = null
+        const cookies = document.cookie.split(";").map((cookie) => cookie.trim())
+
+        // Log all cookies for debugging
+        console.log("Available cookies:", cookies)
+
+        // Try to find the token in various possible cookie names
+        for (const cookie of cookies) {
+          if (cookie.startsWith("access-token=")) {
+            token = cookie.substring("access-token=".length)
+            console.log("Found token in access-token cookie")
+            break
+          } else if (cookie.startsWith("token=")) {
+            token = cookie.substring("token=".length)
+            console.log("Found token in token cookie")
+            break
+          } else if (cookie.startsWith("next-auth.session-token=")) {
+            token = cookie.substring("next-auth.session-token=".length)
+            console.log("Found token in next-auth.session-token cookie")
+            break
+          } else if (cookie.startsWith("session=")) {
+            token = cookie.substring("session=".length)
+            console.log("Found token in session cookie")
+            break
+          }
+        }
+
+        // If no token in cookies, try localStorage
+        if (!token) {
+          token = localStorage.getItem("token") || localStorage.getItem("access-token")
+          if (token) console.log("Found token in localStorage")
+        }
+
+        if (!token) {
+          console.error("No authentication token found")
+          setError("Please log in to access this page")
+          setLoading(false)
+          // Don't redirect immediately to allow showing the error
+          setTimeout(() => router.push("/login"), 2000)
+          return
+        }
+
         const response = await fetch("/api/users/me", {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${document.cookie.replace("access-token=", "")}`,
+            Authorization: `Bearer ${token}`,
           },
+          credentials: "include", // Important for cookies
         })
 
         if (response.ok) {
           const data = await response.json()
-          setUserName(data.user.name)
-          setDietaryRestrictions(data.user.nutritionalPreferences.dietaryRestrictions || [])
-          setCalorieLimit(data.user.nutritionalPreferences.calorieLimit || "")
+          console.log("User data:", data)
+
+          // Safely set user data with fallbacks
+          setUserName(data.user?.name || "")
+
+          // Safely access nutritionalPreferences
+          const nutritionalPrefs = data.user?.nutritionalPreferences || {}
+          setDietaryRestrictions(nutritionalPrefs.dietaryRestrictions || [])
+          setCalorieLimit(nutritionalPrefs.calorieLimit || "")
+        } else if (response.status === 401) {
+          // Unauthorized - redirect to login
+          setError("Your session has expired. Please log in again.")
+          setTimeout(() => router.push("/login"), 2000)
         } else {
-          console.error("Failed to fetch user data")
+          console.error("Failed to fetch user data:", response.status)
+          setError("Failed to load user data. Please try again later.")
+
+          // If it's a 404, the API route might not exist
+          if (response.status === 404) {
+            console.error("API route /api/users/me not found. Make sure it's properly set up.")
+          }
         }
       } catch (error) {
         console.error("Error fetching user data:", error)
+        setError("An unexpected error occurred. Please try again later.")
       } finally {
         setLoading(false)
       }
@@ -58,45 +123,45 @@ function HomePage() {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside)
     }
-  }, [settingsOpen])
+  }, [settingsOpen, router])
 
   // Handle image selection
-    const handleImageChange = (e) => {
-    const file = e.target.files[0];
+  const handleImageChange = (e) => {
+    const file = e.target.files[0]
     if (file) {
-      setSelectedImage(file);
-      setPreviewUrl(URL.createObjectURL(file));
+      setSelectedImage(file)
+      setPreviewUrl(URL.createObjectURL(file))
     }
-  };
-  
+  }
+
   // Convert image to Base64
   const toBase64 = (file) => {
     return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = (error) => reject(error);
-    });
-  };
-  
+      const reader = new FileReader()
+      reader.readAsDataURL(file)
+      reader.onload = () => resolve(reader.result)
+      reader.onerror = (error) => reject(error)
+    })
+  }
+
   // Handle image upload
   const handleImageUpload = async () => {
     if (!selectedImage) {
-      setUploadStatus("Please select an image first");
-      return;
+      setUploadStatus("Please select an image first")
+      return
     }
-  
+
     if (!userName) {
-      setUploadStatus("User not authenticated");
-      return;
+      setUploadStatus("User not authenticated")
+      return
     }
-  
-    setUploadStatus("Uploading...");
-  
+
+    setUploadStatus("Uploading...")
+
     try {
-      const base64Image = await toBase64(selectedImage);
-      const date = new Date().toISOString(); // Current timestamp
-  
+      const base64Image = await toBase64(selectedImage)
+      const date = new Date().toISOString() // Current timestamp
+
       const response = await fetch("/api/images", {
         method: "POST",
         headers: {
@@ -107,34 +172,40 @@ function HomePage() {
           date,
           image: base64Image,
         }),
-      });
-  
+        credentials: "include", // Important for cookies
+      })
+
       if (response.ok) {
-        setUploadStatus("Image uploaded successfully!");
-        setSelectedImage(null);
-        setPreviewUrl("");
-        router.push("/upload-fridge"); // Redirect after successful upload
+        setUploadStatus("Image uploaded successfully!")
+        setSelectedImage(null)
+        setPreviewUrl("")
+        router.push("/upload-fridge") // Redirect after successful upload
       } else {
-        const errorData = await response.json();
-        setUploadStatus(errorData.message || "Failed to upload image");
+        const errorData = await response.json()
+        setUploadStatus(errorData.message || "Failed to upload image")
       }
     } catch (err) {
-      setUploadStatus("An unexpected error occurred");
-      console.error(err);
+      setUploadStatus("An unexpected error occurred")
+      console.error(err)
     }
-  };  
+  }
 
   // Handle logout
   const handleLogout = () => {
-    // Clear the authentication token cookie
+    // Clear all possible cookies
     document.cookie = "access-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"
+    document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"
+    document.cookie = "session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"
+    document.cookie = "next-auth.session-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"
 
     // Clear any other auth-related cookies or local storage items
     localStorage.removeItem("user")
+    localStorage.removeItem("token")
+    localStorage.removeItem("access-token")
     sessionStorage.removeItem("user")
 
     // Redirect to login page
-    router.push("/")
+    router.push("/login")
   }
 
   // Toggle settings dropdown
@@ -146,6 +217,17 @@ function HomePage() {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-900 text-white">
         <div className="text-2xl">Loading...</div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white">
+        <div className="text-xl text-red-400 mb-4">{error}</div>
+        <button onClick={() => router.push("/login")} className="px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded">
+          Go to Login
+        </button>
       </div>
     )
   }
@@ -233,11 +315,11 @@ function HomePage() {
               <div className="space-y-3">
                 <div>
                   <p className="text-gray-400">Name</p>
-                  <p className="font-medium">{userName}</p>
+                  <p className="font-medium">{userName || "Not set"}</p>
                 </div>
                 <div>
                   <p className="text-gray-400">Dietary Restrictions</p>
-                  {dietaryRestrictions.length > 0 ? (
+                  {dietaryRestrictions && dietaryRestrictions.length > 0 ? (
                     <div className="flex flex-wrap gap-2 mt-1">
                       {dietaryRestrictions.map((restriction, index) => (
                         <span key={index} className="bg-purple-500 px-2 py-1 rounded-full text-xs">
@@ -461,3 +543,4 @@ function HomePage() {
 }
 
 export default HomePage
+

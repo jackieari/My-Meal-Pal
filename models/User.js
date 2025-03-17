@@ -1,14 +1,16 @@
+
+// models/User.js
 import mongoose from "mongoose";
 
 const UserSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
-    email: { type: String, required: true },
-    passwordHash: { type: String, required: true }, // Store hashed password
+    email: { type: String, required: true, unique: true },
+    passwordHash: { type: String, required: true },
     nutritionalPreferences: {
-      dietaryRestrictions: { type: [String], default: [] }, // e.g., ["vegan", "gluten-free"]
+      dietaryRestrictions: { type: [String], default: [] },
+      allergens: { type: [String], default: [] },
       calorieLimit: { type: Number, default: null },
-      allergens: { type: [String], default: [] }, // e.g., ["peanuts", "dairy"]
     },
   },
   { timestamps: true }

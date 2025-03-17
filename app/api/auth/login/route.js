@@ -1,52 +1,88 @@
-import { NextResponse } from "next/server";
-import { connectToDatabase } from "@/lib/mongodb";
-import User from "@/models/User";
-import bcrypt from "bcryptjs";
-import { createToken } from "@/lib/auth";
+import { NextResponse } from "next/server"
+import bcrypt from "bcryptjs"
+import { cookies } from "next/headers"
+import { connectToDatabase } from "@/lib/mongodb"
+import User from "@/models/User"
 
-export async function POST(req) {
+export async function POST(request) {
   try {
-    await connectToDatabase();
+    // Connect to the database
+    await connectToDatabase()
 
-    const { email, password } = await req.json();
-    
-    console.log(" Received Login Request for:", email); // Debug log
+    // Parse the request body
+    const body = await request.json()
+    const { email, password } = body
 
-    const user = await User.findOne({ email });
+    console.log("Login attempt for:", email)
 
+    // Validate input
+    if (!email || !password) {
+      return NextResponse.json({ error: "Email and password are required" }, { status: 400 })
+    }
+
+    // Find the user by email
+    const user = await User.findOne({ email })
+
+    // Check if user exists
     if (!user) {
-      console.error("User not found for email:", email);
-      return NextResponse.json({ message: "Invalid email or password" }, { status: 400 });
+      console.log("User not found:", email)
+      return NextResponse.json({ error: "Invalid credentials" }, { status: 401 })
     }
 
-    console.log("User Found:", user); // Debug log
+    // Verify password
+    const isPasswordValid = await bcrypt.compare(password, user.passwordHash)
 
-    if (!user.passwordHash) {
-      console.error("passwordHash is missing in user document:", user);
-      return NextResponse.json({ message: "Server error: Password field missing" }, { status: 500 });
+    if (!isPasswordValid) {
+      console.log("Invalid password for:", email)
+      return NextResponse.json({ error: "Invalid credentials" }, { status: 401 })
     }
 
-    const isMatch = await bcrypt.compare(password, user.passwordHash);
-    
-    if (!isMatch) {
-      console.error(" Password mismatch for user:", email);
-      return NextResponse.json({ message: "Invalid email or password" }, { status: 400 });
-    }
+    console.log("Login successful for:", email)
 
-    const token = createToken(user);
-    const response = NextResponse.json({ message: "Login successful", user }, { status: 200 });
+    // Create a simple session identifier - just use the user ID
+    const sessionId = user._id.toString()
 
-    response.cookies.set("access-token", token, {
-      httpOnly: true,
+    // Get the cookies store
+    const cookieStore = cookies()
+
+    // Set multiple cookies for better compatibility
+
+    // Set session cookie
+    cookieStore.set({
+      name: "session",
+      value: sessionId,
+      httpOnly: false, // Changed to false so client JS can read it
       secure: process.env.NODE_ENV === "production",
-      maxAge: 60 * 60 * 24,
+      sameSite: "lax", // Changed from strict to lax for better compatibility
+      maxAge: 60 * 60 * 24 * 7, // 7 days
       path: "/",
-    });
+    })
 
-    console.log("Login Successful for:", email);
-    return response;
+    // Also set access-token cookie for backward compatibility
+    cookieStore.set({
+      name: "access-token",
+      value: sessionId,
+      httpOnly: false, // Changed to false so client JS can read it
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+      path: "/",
+    })
+
+    console.log("Auth cookies set:", sessionId)
+
+    // Return user data (excluding sensitive information)
+    return NextResponse.json({
+      user: {
+        id: user._id.toString(),
+        name: user.name,
+        email: user.email,
+        nutritionalPreferences: user.nutritionalPreferences || {},
+      },
+    })
   } catch (error) {
-    console.error("Login Error:", error.message);
-    return NextResponse.json({ message: "Internal Server Error", error: error.message }, { status: 500 });
+    console.error("Login error:", error)
+    return NextResponse.json({ error: "Authentication failed" }, { status: 500 })
   }
 }
+
