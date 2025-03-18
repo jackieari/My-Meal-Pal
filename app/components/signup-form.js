@@ -108,7 +108,7 @@ export function SignupForm() {
     <Card className="w-full shadow-lg bg-gray-800 text-white">
       <CardHeader className="space-y-1">
         <div className="flex justify-center mb-4">
-          <div className="text-2xl font-bold text-blue-400">MyFitnessPal</div>
+          <div className="text-2xl font-bold text-blue-400">MyMealPal</div>
         </div>
         <CardTitle className="text-2xl text-center">Create your account</CardTitle>
         <CardDescription className="text-center text-gray-400">
