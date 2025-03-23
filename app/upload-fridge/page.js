@@ -128,8 +128,11 @@ export default function MultiImageSelectionPage() {
 
           if (res.data && Array.isArray(res.data.predictions)) {
             const detectedIngredients = res.data.predictions.map(prediction => prediction.class);
-            // Remove duplicates by converting the array to a Set and then back to an array
-            setIngredients([...new Set(detectedIngredients)]);
+            // Combine the new ingredients with the existing ones
+            setIngredients((prevIngredients) => {
+              const updatedIngredients = [...new Set([...prevIngredients, ...detectedIngredients])];
+              return updatedIngredients;
+            });
           } else {
             setIngredients([]);
           }
