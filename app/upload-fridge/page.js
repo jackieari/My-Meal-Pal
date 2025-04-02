@@ -162,6 +162,10 @@ export default function MultiImageSelectionPage() {
 
   const handleSubmitIngredients = () => {
     console.log("Submitting Ingredients: ", ingredients);
+    //save detected ingredients
+    localStorage.setItem("detectedIngredients", JSON.stringify(ingredients));
+    // Redirect to the recipes page
+    router.push("/recipes");
   };
 
   if (loading) {
