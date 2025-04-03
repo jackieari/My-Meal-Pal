@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -34,7 +33,7 @@ export default function ResultsClient() {
     }, []);
 
     return (
-        <div className="space-y-12">
+        <div className="space-y-12 p-4">
             <section>
                 <h3 className="text-2xl font-semibold mb-4">Your Ingredients</h3>
                 <IngredientsList ingredients={ingredients} />
