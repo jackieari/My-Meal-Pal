@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 export async function POST(req) {
     const body = await req.json();
     const ingredients = body.ingredients || [];
-    const apiKey = "6dbe894a7eca433e92d0c04f82c64323";
+    const apiKey = "9b7d827bda4b4594ac9518c5f8d0a47c";
     const query = ingredients.join(",");
     const url = `https://api.spoonacular.com/recipes/findByIngredients?ingredients=${query}&number=10&ranking=1&ignorePantry=true&apiKey=${apiKey}`;
 
