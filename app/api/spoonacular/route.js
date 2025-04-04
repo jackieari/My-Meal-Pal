@@ -11,16 +11,21 @@ export async function POST(req) {
         const res = await fetch(url);
         const data = await res.json();
 
-        // Fetch detailed recipe information for each recipe
+        // Fetch detailed recipe information including nutrition
         const detailedRecipes = await Promise.all(
             data.map(async (recipe) => {
-                const recipeUrl = `https://api.spoonacular.com/recipes/${recipe.id}/information?apiKey=${apiKey}`;
+                const recipeUrl = `https://api.spoonacular.com/recipes/${recipe.id}/information?includeNutrition=true&apiKey=${apiKey}`;
                 const recipeRes = await fetch(recipeUrl);
                 const recipeData = await recipeRes.json();
+
+                const calories = recipeData.nutrition?.nutrients?.find(n => n.name === "Calories");
+
                 return {
                     ...recipe,
-                    url: recipeData.sourceUrl, // Use the full source URL from the detailed API
+                    url: recipeData.sourceUrl,
                     instructions: recipeData.instructions,
+                    nutrition: recipeData.nutrition?.nutrients || [],
+                    calories: calories?.amount ? `${Math.round(calories.amount)} kcal` : "N/A",
                 };
             })
         );
