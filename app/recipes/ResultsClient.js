@@ -5,149 +5,245 @@ import RecipeList from "../components/RecipeList";
 import IngredientsList from "../components/IngredientsList";
 
 const CUISINES = [
-    "All",
-    "African", "American", "British", "Cajun", "Caribbean", "Chinese", "Eastern European",
-    "European", "French", "German", "Greek", "Indian", "Irish", "Italian", "Japanese",
-    "Jewish", "Korean", "Latin American", "Mediterranean", "Mexican", "Middle Eastern",
-    "Nordic", "Southern", "Spanish", "Thai", "Vietnamese"
+  "All", "African", "American", "British", "Cajun", "Caribbean", "Chinese", "Eastern European",
+  "European", "French", "German", "Greek", "Indian", "Irish", "Italian", "Japanese",
+  "Jewish", "Korean", "Latin American", "Mediterranean", "Mexican", "Middle Eastern",
+  "Nordic", "Southern", "Spanish", "Thai", "Vietnamese"
 ];
 
 export default function ResultsClient() {
-    const [ingredients, setIngredients] = useState([]);
-    const [recipes, setRecipes] = useState([]);
-    const [cuisine, setCuisine] = useState("All");
+  const [ingredients, setIngredients] = useState([]);
+  const [recipes, setRecipes] = useState([]);
+  const [cuisine, setCuisine] = useState("All");
 
-    // New filter states
-    const [maxReadyTime, setMaxReadyTime] = useState("");
-    const [minServings, setMinServings] = useState("");
-    const [maxCarbs, setMaxCarbs] = useState("");
-    const [maxCalories, setMaxCalories] = useState("");
+  const [maxReadyTime, setMaxReadyTime] = useState("");
+  const [minServings, setMinServings] = useState("");
+  const [maxCarbs, setMaxCarbs] = useState("");
+  const [maxCalories, setMaxCalories] = useState("");
 
-    useEffect(() => {
-        const storedIngredients = localStorage.getItem("detectedIngredients");
-        const storedCuisine = localStorage.getItem("selectedCuisine");
+  const [userEmail, setUserEmail] = useState("");
+  const [dietaryRestrictions, setDietaryRestrictions] = useState([]);
+  const [allergens, setAllergens] = useState([]);
 
-        if (storedIngredients) {
-            setIngredients(JSON.parse(storedIngredients));
+  useEffect(() => {
+    const storedIngredients = localStorage.getItem("detectedIngredients");
+    const storedCuisine = localStorage.getItem("selectedCuisine");
+
+    if (storedIngredients) {
+      setIngredients(JSON.parse(storedIngredients));
+    }
+
+    if (storedCuisine) {
+      setCuisine(storedCuisine);
+    }
+
+    const fetchUserInfo = async () => {
+      let token = null;
+      const cookies = document.cookie.split(";").map(c => c.trim());
+      for (const cookie of cookies) {
+        if (cookie.startsWith("access-token=")) {
+          token = cookie.substring("access-token=".length);
+          break;
+        } else if (cookie.startsWith("token=")) {
+          token = cookie.substring("token=".length);
+          break;
+        } else if (cookie.startsWith("next-auth.session-token=")) {
+          token = cookie.substring("next-auth.session-token=".length);
+          break;
+        } else if (cookie.startsWith("session=")) {
+          token = cookie.substring("session=".length);
+          break;
         }
+      }
 
-        if (storedCuisine) {
-            setCuisine(storedCuisine);
-        }
-    }, []);
+      if (!token) {
+        token = localStorage.getItem("token") || localStorage.getItem("access-token");
+      }
 
-    const handleSubmit = async () => {
-        const selectedCuisine = cuisine === "All" ? "" : cuisine;
+      if (!token) return;
 
-        localStorage.setItem("selectedCuisine", cuisine);
+      const res = await fetch("/api/users/me", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        credentials: "include",
+      });
 
-        const filters = {
-            ingredients,
-            cuisine: selectedCuisine,
-            maxReadyTime: maxReadyTime ? Number(maxReadyTime) : undefined,
-            minServings: minServings ? Number(minServings) : undefined,
-            maxCarbs: maxCarbs ? Number(maxCarbs) : undefined,
-            maxCalories: maxCalories ? Number(maxCalories) : undefined,
-        };
-
-        const res = await fetch("/api/spoonacular", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(filters),
-        });
-
+      if (res.ok) {
         const data = await res.json();
-        console.log("Spoonacular API response:", data);
-
-        if (data.success && Array.isArray(data.recipes)) {
-            setRecipes(data.recipes);
-        } else {
-            console.error("Unexpected recipes format", data.recipes);
-            setRecipes([]);
-        }
+        setUserEmail(data.user?.email || "");
+        const prefs = data.user?.nutritionalPreferences || {};
+        setDietaryRestrictions(prefs.dietaryRestrictions || []);
+        setAllergens(prefs.allergens || []);
+      }
     };
 
-    return (
-        <div className="space-y-12 p-4">
-            <section>
-                <h3 className="text-2xl font-semibold mb-4">Your Ingredients</h3>
-                <IngredientsList ingredients={ingredients} />
-            </section>
+    fetchUserInfo();
+  }, []);
 
-            <section>
-                <div className="flex flex-col gap-4 mb-6">
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                        <label className="text-lg font-medium">Choose a cuisine:</label>
-                        <select
-                            className="border border-gray-300 rounded px-3 py-2"
-                            value={cuisine}
-                            onChange={(e) => setCuisine(e.target.value)}
-                        >
-                            {CUISINES.map((c) => (
-                                <option key={c} value={c}>
-                                    {c}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
+  const handleSubmit = async () => {
+    const selectedCuisine = cuisine === "All" ? "" : cuisine;
 
-                    {/* Filters */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium">Max Ready Time (min)</label>
-                            <input
-                                type="number"
-                                className="w-full border border-gray-300 rounded px-3 py-2"
-                                value={maxReadyTime}
-                                onChange={(e) => setMaxReadyTime(e.target.value)}
-                                placeholder="e.g. 20"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium">Min Servings</label>
-                            <input
-                                type="number"
-                                className="w-full border border-gray-300 rounded px-3 py-2"
-                                value={minServings}
-                                onChange={(e) => setMinServings(e.target.value)}
-                                placeholder="e.g. 1"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium">Max Carbs (g)</label>
-                            <input
-                                type="number"
-                                className="w-full border border-gray-300 rounded px-3 py-2"
-                                value={maxCarbs}
-                                onChange={(e) => setMaxCarbs(e.target.value)}
-                                placeholder="e.g. 100"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium">Max Calories</label>
-                            <input
-                                type="number"
-                                className="w-full border border-gray-300 rounded px-3 py-2"
-                                value={maxCalories}
-                                onChange={(e) => setMaxCalories(e.target.value)}
-                                placeholder="e.g. 800"
-                            />
-                        </div>
-                    </div>
+    localStorage.setItem("selectedCuisine", cuisine);
 
-                    <button
-                        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition self-start"
-                        onClick={handleSubmit}
-                    >
-                        Submit
-                    </button>
-                </div>
-            </section>
+    const filters = {
+      ingredients,
+      cuisine: selectedCuisine,
+      maxReadyTime: maxReadyTime ? Number(maxReadyTime) : undefined,
+      minServings: minServings ? Number(minServings) : undefined,
+      maxCarbs: maxCarbs ? Number(maxCarbs) : undefined,
+      maxCalories: maxCalories ? Number(maxCalories) : undefined,
+    };
 
-            <section>
-                <h3 className="text-2xl font-semibold mb-4">Recipes You Can Make</h3>
-                <RecipeList recipes={recipes} />
-            </section>
+    const res = await fetch("/api/spoonacular", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(filters),
+    });
+
+    const data = await res.json();
+    console.log("Spoonacular API response:", data);
+
+    if (data.success && Array.isArray(data.recipes)) {
+      setRecipes(data.recipes);
+    } else {
+      console.error("Unexpected recipes format", data.recipes);
+      setRecipes([]);
+    }
+  };
+
+  return (
+    <div className="space-y-12 p-4">
+      {/* User Preferences */}
+      <section>
+        <h3 className="text-2xl font-semibold mb-4">Your Preferences</h3>
+
+        {userEmail && (
+          <p className="text-sm text-gray-700 mb-4">
+            Email: <span className="font-medium">{userEmail}</span>
+          </p>
+        )}
+
+        <div className="mb-4">
+          <p className="text-sm font-medium text-gray-800 mb-1">Dietary Restrictions:</p>
+          {dietaryRestrictions.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {dietaryRestrictions.map((item, index) => (
+                <span
+                  key={index}
+                  className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full border border-purple-300"
+                >
+                  {item}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-gray-500">None specified</p>
+          )}
         </div>
-    );
+
+        <div>
+          <p className="text-sm font-medium text-gray-800 mb-1">Allergens:</p>
+          {allergens.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {allergens.map((item, index) => (
+                <span
+                  key={index}
+                  className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full border border-blue-300"
+                >
+                  {item.replace(/-/g, " ")}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-gray-500">None specified</p>
+          )}
+        </div>
+      </section>
+
+      {/* Detected Ingredients */}
+      <section>
+        <h3 className="text-2xl font-semibold mb-4">Your Ingredients</h3>
+        <IngredientsList ingredients={ingredients} />
+      </section>
+
+      {/* Filters */}
+      <section>
+        <div className="flex flex-col gap-4 mb-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <label className="text-lg font-medium">Choose a cuisine:</label>
+            <select
+              className="border border-gray-300 rounded px-3 py-2"
+              value={cuisine}
+              onChange={(e) => setCuisine(e.target.value)}
+            >
+              {CUISINES.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div>
+              <label className="block text-sm font-medium">Max Ready Time (min)</label>
+              <input
+                type="number"
+                className="w-full border border-gray-300 rounded px-3 py-2"
+                value={maxReadyTime}
+                onChange={(e) => setMaxReadyTime(e.target.value)}
+                placeholder="e.g. 20"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium">Min Servings</label>
+              <input
+                type="number"
+                className="w-full border border-gray-300 rounded px-3 py-2"
+                value={minServings}
+                onChange={(e) => setMinServings(e.target.value)}
+                placeholder="e.g. 1"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium">Max Carbs (g)</label>
+              <input
+                type="number"
+                className="w-full border border-gray-300 rounded px-3 py-2"
+                value={maxCarbs}
+                onChange={(e) => setMaxCarbs(e.target.value)}
+                placeholder="e.g. 100"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium">Max Calories</label>
+              <input
+                type="number"
+                className="w-full border border-gray-300 rounded px-3 py-2"
+                value={maxCalories}
+                onChange={(e) => setMaxCalories(e.target.value)}
+                placeholder="e.g. 800"
+              />
+            </div>
+          </div>
+
+          <button
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition self-start"
+            onClick={handleSubmit}
+          >
+            Submit
+          </button>
+        </div>
+      </section>
+
+      {/* Recipe Results */}
+      <section>
+        <h3 className="text-2xl font-semibold mb-4">Recipes You Can Make</h3>
+        <RecipeList recipes={recipes} />
+      </section>
+    </div>
+  );
 }
