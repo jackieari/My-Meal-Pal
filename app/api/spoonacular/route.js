@@ -4,23 +4,48 @@ export async function POST(req) {
     const body = await req.json();
     const ingredients = body.ingredients || [];
     const cuisine = body.cuisine || "";
+
+    const maxReadyTime = body.maxReadyTime;
+    const minServings = body.minServings;
+    const maxCarbs = body.maxCarbs;
+    const maxCalories = body.maxCalories;
+
     const apiKey = "9b7d827bda4b4594ac9518c5f8d0a47c";
 
     const query = ingredients.join(",");
-    const url = `https://api.spoonacular.com/recipes/complexSearch` +
+    let url = `https://api.spoonacular.com/recipes/complexSearch` +
         `?includeIngredients=${query}` +
         `&cuisine=${encodeURIComponent(cuisine)}` +
-        `&number=10` +
+        `&number=20` +  // increased to allow some margin for post-filtering
         `&addRecipeInformation=true` +
         `&addRecipeInstructions=true` +
         `&addRecipeNutrition=true` +
         `&apiKey=${apiKey}`;
 
+    if (maxReadyTime) {
+        url += `&maxReadyTime=${maxReadyTime}`;
+    }
+
     try {
         const res = await fetch(url);
         const data = await res.json();
 
-        const detailedRecipes = (data.results || []).map(recipe => {
+        const detailedRecipes = (data.results || []).filter(recipe => {
+            // Calories and carbs
+            const nutrients = recipe.nutrition?.nutrients || [];
+            const caloriesObj = nutrients.find(n => n.name === "Calories");
+            const carbsObj = nutrients.find(n => n.name === "Carbohydrates");
+
+            const calories = caloriesObj?.amount || 0;
+            const carbs = carbsObj?.amount || 0;
+            const servings = recipe.servings || 0;
+
+            if (maxCalories && calories > maxCalories) return false;
+            if (maxCarbs && carbs > maxCarbs) return false;
+            if (minServings && servings < minServings) return false;
+
+            return true;
+        }).map(recipe => {
             const calories = recipe.nutrition?.nutrients?.find(n => n.name === "Calories");
 
             return {
