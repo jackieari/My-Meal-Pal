@@ -24,11 +24,9 @@ export function BodyMetricsStep({ formData, updateFormData }) {
     { id: "vegetarian", label: "Vegetarian" },
     { id: "vegan", label: "Vegan" },
     { id: "pescatarian", label: "Pescatarian" },
-    { id: "keto", label: "Keto" },
+    { id: "Ketogenic", label: "Ketogenic" },
     { id: "paleo", label: "Paleo" },
     { id: "gluten-free", label: "Gluten-Free" },
-    { id: "dairy-free", label: "Dairy-Free" },
-    { id: "low-carb", label: "Low Carb" },
   ]
 
   // Handle allergen selection
