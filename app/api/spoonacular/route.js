@@ -10,13 +10,13 @@ export async function POST(req) {
     const maxCarbs = body.maxCarbs;
     const maxCalories = body.maxCalories;
 
-    const apiKey = "9b7d827bda4b4594ac9518c5f8d0a47c";
+    const apiKey = "9b7d827bda4b4594ac9518c5f8d0a47c";  // Ensure this is your actual API key
 
     const query = ingredients.join(",");
     let url = `https://api.spoonacular.com/recipes/complexSearch` +
         `?includeIngredients=${query}` +
         `&cuisine=${encodeURIComponent(cuisine)}` +
-        `&number=20` +  // increased to allow some margin for post-filtering
+        `&number=20` +  // Increased to allow some margin for post-filtering
         `&addRecipeInformation=true` +
         `&addRecipeInstructions=true` +
         `&addRecipeNutrition=true` +
@@ -49,7 +49,7 @@ export async function POST(req) {
             const calories = recipe.nutrition?.nutrients?.find(n => n.name === "Calories");
 
             return {
-                id: recipe.id,
+                recipeId: recipe.id, // Ensure we pass recipeId here
                 title: recipe.title,
                 image: recipe.image,
                 url: recipe.sourceUrl,

@@ -25,5 +25,10 @@ const UserSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+UserSchema.virtual('likedRecipes', {
+  ref: 'UserLike',
+  localField: '_id',
+  foreignField: 'userId'
+});
 
 export default mongoose.models.User || mongoose.model("User", UserSchema);
