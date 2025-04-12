@@ -6,55 +6,68 @@ import { useState, useEffect } from "react";
 import { Heart } from "lucide-react";
 
 export default function RecipeList({ recipes = [] }) {
-  const [likedRecipes, setLikedRecipes] = useState({});
+  const [likedRecipes, setLikedRecipes] = useState({});  // State for liked recipes
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
+    // Fetch liked recipes from the backend on page load
     const fetchLikedRecipes = async () => {
       try {
+        setLoading(true); // Set loading state to true
         const response = await fetch("/api/likes", {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
           },
         });
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch liked recipes");
+        }
+
         const data = await response.json();
 
+        // Check if we received liked recipes and update the state
         if (data.recipes) {
           const likedRecipesMap = {};
           data.recipes.forEach((recipeId) => {
-            likedRecipesMap[recipeId] = true;
+            likedRecipesMap[recipeId] = true;  // Mark recipe as liked in state
           });
           setLikedRecipes(likedRecipesMap);
+        } else {
+          console.error("No recipes found in the response");
+          setLikedRecipes({});
         }
       } catch (error) {
         console.error("Error fetching liked recipes:", error);
+        setError("Failed to load liked recipes");
+      } finally {
+        setLoading(false); // Set loading state to false
       }
     };
 
     fetchLikedRecipes();
-  }, []);
+  }, []);  // Empty dependency array to run on component mount
 
   const toggleLike = async (recipeId) => {
-    if (!recipeId) {
-      console.error("No recipeId provided.");
-      return;
-    }
-
+    console.log("Clicked Like for Recipe ID:", recipeId);  // Debugging line
     try {
       const response = await fetch("/api/likes", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ recipeId }),
+        body: JSON.stringify({ recipeId }), // Send the recipeId to backend
       });
 
       const data = await response.json();
 
+      // If the like/unlike action was successful, update the state
       if (data.message === "Recipe liked successfully" || data.message === "Recipe unliked successfully") {
         setLikedRecipes((prev) => ({
           ...prev,
-          [recipeId]: !prev[recipeId], // Toggle the like state
+          [recipeId]: !prev[recipeId],  // Toggle like state
         }));
       } else {
         console.error("Error toggling like status:", data.error);
@@ -63,6 +76,24 @@ export default function RecipeList({ recipes = [] }) {
       console.error("Error liking/unliking recipe:", error);
     }
   };
+
+  // Display loading screen if data is still being fetched
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <p className="text-xl">Loading recipes...</p>
+      </div>
+    );
+  }
+
+  // Display error message if something goes wrong while fetching data
+  if (error) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <p className="text-xl text-red-600">{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -84,7 +115,7 @@ export default function RecipeList({ recipes = [] }) {
               <button
                 onClick={(e) => {
                   e.preventDefault();
-                  toggleLike(recipe.recipeId);  // Pass the correct recipeId here
+                  toggleLike(recipe.recipeId);  // Use recipeId here to toggle like/unlike
                 }}
                 className="flex items-center justify-center p-2 transition-colors"
                 aria-label={likedRecipes[recipe.recipeId] ? "Unlike recipe" : "Like recipe"}
@@ -99,42 +130,6 @@ export default function RecipeList({ recipes = [] }) {
             <p className="text-sm text-gray-600">
               {recipe.usedIngredientCount} used / {recipe.missedIngredientCount} missing
             </p>
-
-            {/* Display Ingredients Used */}
-            {recipe.usedIngredients && recipe.usedIngredients.length > 0 && (
-              <div className="mt-4">
-                <h4 className="text-lg font-medium">Ingredients:</h4>
-                <ul className="list-disc pl-6 space-y-2 mt-2 text-gray-800">
-                  {recipe.usedIngredients.map((ingredient, index) => (
-                    <li key={index}>{ingredient.name}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {/* Display Calories */}
-            {recipe.calories && (
-              <p className="text-sm text-green-700 mt-2">
-                <strong>Calories:</strong> {recipe.calories}
-              </p>
-            )}
-
-            {/* Display Basic Nutrition Info */}
-            {recipe.nutrition && recipe.nutrition.length > 0 && (
-              <div className="mt-2 text-sm text-gray-700">
-                <p className="font-medium mb-1">Nutrition:</p>
-                <ul className="list-disc pl-5 space-y-1">
-                  {recipe.nutrition
-                    .filter((n) => ["Fat", "Carbohydrates", "Protein"].includes(n.name))
-                    .map((nutrient) => (
-                      <li key={nutrient.name}>
-                        {nutrient.name}: {nutrient.amount}
-                        {nutrient.unit}
-                      </li>
-                    ))}
-                </ul>
-              </div>
-            )}
           </div>
         </div>
       ))}
