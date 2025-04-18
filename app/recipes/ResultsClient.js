@@ -83,36 +83,63 @@ export default function ResultsClient() {
     fetchUserInfo();
   }, []);
 
+  const DIET_INCOMPATIBLE_INGREDIENTS = {
+    vegan: ["fish", "meat", "chicken", "pork", "beef", "egg", "cheese", "milk", "butter"],
+    vegetarian: ["fish", "chicken", "pork", "beef"],
+    // Add more diets as needed
+  };
+  
   const handleSubmit = async () => {
+    // Pre-filter the ingredients based on the selected dietary restrictions
+    const diet = dietaryRestrictions[0]?.toLowerCase(); // Assuming first restriction is the main one
+    const incompatibleIngredients = DIET_INCOMPATIBLE_INGREDIENTS[diet] || [];
+  
+    // Filter out incompatible ingredients from the user's selected ingredients
+    const filteredIngredients = ingredients.filter((ingredient) => {
+      return !incompatibleIngredients.some((incompatible) =>
+        ingredient.toLowerCase().includes(incompatible)
+      );
+    });
+  
+    // Update the ingredients state with the filtered ingredients
+    setIngredients(filteredIngredients);
+  
+    // Update cuisine handling for 'All' to be empty string
     const selectedCuisine = cuisine === "All" ? "" : cuisine;
-
+  
+    // Store the selected cuisine in localStorage
     localStorage.setItem("selectedCuisine", cuisine);
-
+  
+    // Create the filters object, including the dietaryRestrictions and allergens
     const filters = {
-      ingredients,
+      ingredients: filteredIngredients,
       cuisine: selectedCuisine,
       maxReadyTime: maxReadyTime ? Number(maxReadyTime) : undefined,
       minServings: minServings ? Number(minServings) : undefined,
       maxCarbs: maxCarbs ? Number(maxCarbs) : undefined,
       maxCalories: maxCalories ? Number(maxCalories) : undefined,
+      dietaryRestrictions,  // Add dietaryRestrictions to the filters
+      allergens,  // Add allergens to the filters
     };
-
+  
+    // Send the POST request to the API
     const res = await fetch("/api/spoonacular", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(filters),
     });
-
+  
     const data = await res.json();
     console.log("Spoonacular API response:", data);
-
+  
+    // Handle the response data
     if (data.success && Array.isArray(data.recipes)) {
       setRecipes(data.recipes);
     } else {
       console.error("Unexpected recipes format", data.recipes);
       setRecipes([]);
     }
-  };
+  };  
 
   return (
     <div className="space-y-12 p-4">
