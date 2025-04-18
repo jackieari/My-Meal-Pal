@@ -10,7 +10,7 @@ export async function POST(req) {
     const maxCarbs = body.maxCarbs;
     const maxCalories = body.maxCalories;
 
-    const apiKey = "9b7d827bda4b4594ac9518c5f8d0a47c";  // Ensure this is your actual API key
+    const apiKey = "6f3e35ad7c004cc28796a5e46e86931f";  // Ensure this is your actual API key
 
     const query = ingredients.join(",");
     let url = `https://api.spoonacular.com/recipes/complexSearch` +
