@@ -29,7 +29,6 @@ function chunk(arr, size = 100) {
   return out;
 }
 
-/* ---------- GET  /api/user/liked-recipes ---------- */
 
 export async function GET() {
   try {
