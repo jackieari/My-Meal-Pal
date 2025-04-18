@@ -10,15 +10,9 @@ export async function POST(req) {
     const maxCarbs = body.maxCarbs;
     const maxCalories = body.maxCalories;
 
-    const dietaryRestrictions = body.dietaryRestrictions || [];  // diet -> dietaryRestrictions
-    const allergens = body.allergens || [];  // allergens -> intolerances
-
-    const apiKey = "9b7d827bda4b4594ac9518c5f8d0a47c";  // Ensure this is your actual API key
+    const apiKey = "6f3e35ad7c004cc28796a5e46e86931f";  // Ensure this is your actual API key
 
     const query = ingredients.join(",");
-    const dietParam = dietaryRestrictions.length > 0 ? `&diet=${dietaryRestrictions.join(",")}` : "";
-    const intolerancesParam = allergens.length > 0 ? `&intolerances=${allergens.join(",")}` : "";
-
     let url = `https://api.spoonacular.com/recipes/complexSearch` +
         `?includeIngredients=${query}` +
         `&cuisine=${encodeURIComponent(cuisine)}` +
@@ -26,11 +20,8 @@ export async function POST(req) {
         `&addRecipeInformation=true` +
         `&addRecipeInstructions=true` +
         `&addRecipeNutrition=true` +
-        `&apiKey=${apiKey}` +
-        dietParam +  // Add diet directly
-        intolerancesParam;  // Add intolerances directly
+        `&apiKey=${apiKey}`;
 
-    // Add optional filters (maxReadyTime, maxCalories, maxCarbs, minServings)
     if (maxReadyTime) {
         url += `&maxReadyTime=${maxReadyTime}`;
     }
@@ -40,7 +31,7 @@ export async function POST(req) {
         const data = await res.json();
 
         const detailedRecipes = (data.results || []).filter(recipe => {
-            // Calories and carbs filtering
+            // Calories and carbs
             const nutrients = recipe.nutrition?.nutrients || [];
             const caloriesObj = nutrients.find(n => n.name === "Calories");
             const carbsObj = nutrients.find(n => n.name === "Carbohydrates");

@@ -6,12 +6,9 @@ import { connectToDatabase } from "@/lib/mongodb";
 import UserLike from "@/models/UserLike";
 import User from "@/models/User";
 
-/* ---------- config ---------- */
 
-// ❗ put your actual key below
-const SPOONACULAR_KEY = "9b7d827bda4b4594ac9518c5f8d0a47c";
 
-/* ---------- helpers ---------- */
+const SPOONACULAR_KEY = "6f3e35ad7c004cc28796a5e46e86931f";
 
 async function getAuthenticatedUser() {
   const cookieStore = cookies();
@@ -29,7 +26,7 @@ function chunk(arr, size = 100) {
   return out;
 }
 
-/* ---------- GET  /api/user/liked-recipes ---------- */
+/* GET  /api/user/liked-recipes- */
 
 export async function GET() {
   try {
