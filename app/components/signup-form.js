@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft, ArrowRight, Check } from "lucide-react"
+import { ArrowLeft, ArrowRight, Check, Zap } from "lucide-react"
 import { Button } from "@/app/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/app/components/ui/card"
 import { AccountInfoStep } from "@/app/components/account-info-step"
@@ -101,17 +101,20 @@ export function SignupForm() {
   const calorieData = calculateCalories(formData)
 
   // Determine if we're in review mode (Step 3) or confirm account creation mode (Step 4)
-  const isReviewStep = currentStep === 3;
-  const isConfirmStep = currentStep === 4;
+  const isReviewStep = currentStep === 3
+  const isConfirmStep = currentStep === 4
 
   return (
-    <Card className="w-full shadow-lg bg-gray-800 text-white">
+    <Card className="w-full shadow-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-700">
       <CardHeader className="space-y-1">
         <div className="flex justify-center mb-4">
-          <div className="text-2xl font-bold text-blue-400">MyMealPal</div>
+          <div className="flex items-center gap-2 text-2xl font-bold">
+            <Zap className="h-6 w-6 text-blue-700 dark:text-blue-500" />
+            <span className="text-blue-700 dark:text-blue-500">MyMealPal</span>
+          </div>
         </div>
-        <CardTitle className="text-2xl text-center">Create your account</CardTitle>
-        <CardDescription className="text-center text-gray-400">
+        <CardTitle className="text-2xl text-center text-gray-900 dark:text-white">Create your account</CardTitle>
+        <CardDescription className="text-center text-gray-700 dark:text-gray-300">
           {currentStep === 1
             ? "First, let's create your account"
             : currentStep === 2
@@ -120,57 +123,6 @@ export function SignupForm() {
                 ? "Review your personalized plan"
                 : "Confirm account creation"}
         </CardDescription>
-
-        {/* Step indicator */}
-        <div className="flex items-center justify-center mt-4">
-          <div className="flex items-center">
-            <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                currentStep === 1 ? "bg-blue-500 text-white" : "bg-gray-700 text-blue-400"
-              }`}
-            >
-              1
-            </div>
-            <div className="w-10 h-1 bg-gray-700">
-              <div className={`h-full ${currentStep > 1 ? "bg-blue-500" : "bg-gray-700"}`}></div>
-            </div>
-            <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                currentStep === 2
-                  ? "bg-blue-500 text-white"
-                  : currentStep > 2
-                    ? "bg-gray-700 text-blue-400"
-                    : "bg-gray-700 text-gray-500"
-              }`}
-            >
-              2
-            </div>
-            <div className="w-10 h-1 bg-gray-700">
-              <div className={`h-full ${currentStep > 2 ? "bg-blue-500" : "bg-gray-700"}`}></div>
-            </div>
-            <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                currentStep === 3
-                  ? "bg-blue-500 text-white"
-                  : currentStep > 3
-                    ? "bg-gray-700 text-blue-400"
-                    : "bg-gray-700 text-gray-500"
-              }`}
-            >
-              3
-            </div>
-            <div className="w-10 h-1 bg-gray-700">
-              <div className={`h-full ${currentStep > 3 ? "bg-blue-500" : "bg-gray-700"}`}></div>
-            </div>
-            <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                currentStep === 4 ? "bg-blue-500 text-white" : "bg-gray-700 text-gray-500"
-              }`}
-            >
-              4
-            </div>
-          </div>
-        </div>
       </CardHeader>
 
       <CardContent>
@@ -182,26 +134,29 @@ export function SignupForm() {
           ) : isReviewStep || isConfirmStep ? (
             <>
               <CalorieResultsStep calorieData={calorieData} formData={formData} />
-              
+
               {isConfirmStep && (
-                <div className="mt-6 p-4 bg-gray-700 rounded-lg">
-                  <h3 className="text-lg font-medium text-blue-400 mb-2">Ready to create your account?</h3>
-                  <p className="text-gray-300">
-                    We'll set up your account with the information provided above. You can always update your preferences later.
+                <div className="mt-6 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-700">
+                  <h3 className="text-lg font-medium text-blue-700 dark:text-blue-500 mb-2">
+                    Ready to create your account?
+                  </h3>
+                  <p className="text-gray-800 dark:text-gray-200">
+                    We'll set up your account with the information provided above. You can always update your
+                    preferences later.
                   </p>
                 </div>
               )}
             </>
           ) : null}
 
-          {error && <div className="text-red-500 text-sm text-center">{error}</div>}
+          {error && <div className="text-red-600 dark:text-red-400 text-sm text-center">{error}</div>}
 
           <div className="flex justify-between mt-6">
             {currentStep > 1 && (
               <Button
                 type="button"
                 variant="outline"
-                className="bg-gray-700 hover:bg-gray-600 text-white"
+                className="bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-700"
                 onClick={handleBack}
               >
                 <ArrowLeft className="mr-2 h-4 w-4" />
@@ -210,27 +165,27 @@ export function SignupForm() {
             )}
 
             {currentStep < 3 ? (
-              <Button 
-                type="button" 
-                className="ml-auto bg-blue-500 hover:bg-blue-600" 
+              <Button
+                type="button"
+                className="ml-auto bg-blue-700 hover:bg-blue-800 dark:bg-blue-500 dark:hover:bg-blue-600 text-white"
                 onClick={handleNext}
               >
                 Next
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             ) : isReviewStep ? (
-              <Button 
-                type="button" 
-                className="ml-auto bg-blue-500 hover:bg-blue-600"
+              <Button
+                type="button"
+                className="ml-auto bg-blue-700 hover:bg-blue-800 dark:bg-blue-500 dark:hover:bg-blue-600 text-white"
                 onClick={handleNext}
               >
                 Looks Good
                 <Check className="ml-2 h-4 w-4" />
               </Button>
             ) : (
-              <Button 
-                type="submit" 
-                className="ml-auto bg-green-600 hover:bg-green-700" 
+              <Button
+                type="submit"
+                className="ml-auto bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700 text-white"
                 disabled={isLoading}
               >
                 {isLoading ? "Creating account..." : "Create My Account"}
@@ -241,18 +196,24 @@ export function SignupForm() {
       </CardContent>
 
       <CardFooter className="flex flex-col space-y-4">
-        <p className="text-sm text-gray-400">
+        <p className="text-sm text-gray-700 dark:text-gray-300">
           Already have an account?{" "}
-          <Link href="/login" className="text-blue-400 hover:underline">
+          <Link href="/login" className="text-blue-700 dark:text-blue-500 hover:text-blue-800 dark:hover:text-blue-400">
             Log in
           </Link>
         </p>
 
         <div className="flex gap-4 justify-center">
-          <Link href="/" className="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600">
+          <Link
+            href="/"
+            className="px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-700"
+          >
             Home
           </Link>
-          <Link href="/profile" className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600">
+          <Link
+            href="/profile"
+            className="px-4 py-2 bg-blue-700 dark:bg-blue-500 text-white rounded hover:bg-blue-800 dark:hover:bg-blue-600"
+          >
             Profile
           </Link>
         </div>
