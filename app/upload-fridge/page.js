@@ -1,117 +1,126 @@
-"use client"; 
+"use client"
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import Image from "next/image";
-import axios from "axios";
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import Link from "next/link"
+import Image from "next/image"
+import { Calendar, Camera, ChevronDown, LogOut, Menu, Plus, Settings, Upload, User, X, Zap } from "lucide-react"
+import axios from "axios"
 
-export default function MultiImageSelectionPage() {
-  const [fridgeImages, setFridgeImages] = useState([]);
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [userName, setUserName] = useState("");
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [ingredients, setIngredients] = useState([]);
-  const [newIngredient, setNewIngredient] = useState("");
-  const router = useRouter();
+export default function FridgeUploadPage() {
+  const [fridgeImages, setFridgeImages] = useState([])
+  const [selectedImage, setSelectedImage] = useState(null)
+  const [userName, setUserName] = useState("")
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [ingredients, setIngredients] = useState([])
+  const [newIngredient, setNewIngredient] = useState("")
+  const [analyzing, setAnalyzing] = useState(false)
+  const router = useRouter()
 
   useEffect(() => {
     const fetchUserInfo = async () => {
       try {
-        const response = await fetch("/api/users/me", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${document.cookie.replace("access-token=", "")}`,
-          },
-        });
+        let token = null
+        const cookies = document.cookie.split(";").map((c) => c.trim())
+        for (const c of cookies) {
+          if (c.startsWith("access-token=")) token = c.slice(13)
+          if (c.startsWith("token=")) token = c.slice(6)
+          if (c.startsWith("next-auth.session-token=")) token = c.slice(24)
+          if (c.startsWith("session=")) token = c.slice(8)
+        }
+        if (!token) token = localStorage.getItem("token") || localStorage.getItem("access-token")
 
-        if (response.ok) {
-          const data = await response.json();
-          setUserName(data.user.name);
+        const res = await fetch("/api/users/me", {
+          headers: { Authorization: `Bearer ${token}` },
+          credentials: "include",
+        })
+
+        if (res.ok) {
+          const data = await res.json()
+          setUserName(data.user?.name || "")
         } else {
-          console.error("Failed to fetch user data");
+          console.error("Failed to fetch user data")
         }
       } catch (error) {
-        console.error("Error fetching user data:", error);
+        console.error("Error fetching user data:", error)
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    };
+    }
 
-    fetchUserInfo();
+    fetchUserInfo()
 
-    const handleClickOutside = (event) => {
-      if (settingsOpen && !event.target.closest(".settings-dropdown")) {
-        setSettingsOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [settingsOpen]);
+    const clickOutside = (e) => settingsOpen && !e.target.closest(".settings-dropdown") && setSettingsOpen(false)
+    document.addEventListener("mousedown", clickOutside)
+    return () => document.removeEventListener("mousedown", clickOutside)
+  }, [settingsOpen])
 
   useEffect(() => {
     const fetchImages = async () => {
       if (!userName) {
-        console.log("No user name set");
-        return;
+        console.log("No user name set")
+        return
       }
 
       try {
-        const url = `/api/images?name=${userName}`;
-        const response = await fetch(url);
+        const url = `/api/images?name=${userName}`
+        const response = await fetch(url)
         if (response.ok) {
-          const data = await response.json();
-          setFridgeImages(data.images || []);
+          const data = await response.json()
+          setFridgeImages(data.images || [])
         } else {
-          console.error("Failed to fetch images");
+          console.error("Failed to fetch images")
         }
       } catch (error) {
-        console.error("Error fetching images:", error);
+        console.error("Error fetching images:", error)
       }
-    };
+    }
 
     if (userName) {
-      fetchImages();
+      fetchImages()
     }
-  }, [userName]);
+  }, [userName])
 
-  const toggleSettings = () => {
-    setSettingsOpen(!settingsOpen);
-  };
+  const toggleSettings = () => setSettingsOpen(!settingsOpen)
+  const toggleMobileMenu = () => setMobileMenuOpen(!mobileMenuOpen)
 
   const handleLogout = () => {
-    document.cookie = "access-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-    localStorage.removeItem("user");
-    sessionStorage.removeItem("user");
-    router.push("/login");
-  };
+    document.cookie = "access-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"
+    document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"
+    document.cookie = "session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"
+    document.cookie = "next-auth.session-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"
+    localStorage.removeItem("user")
+    localStorage.removeItem("token")
+    localStorage.removeItem("access-token")
+    sessionStorage.removeItem("user")
+    router.push("/login")
+  }
 
   const toggleImageSelection = (img) => {
     if (selectedImage === img) {
-      setSelectedImage(null);
+      setSelectedImage(null)
     } else {
-      setSelectedImage(img);
+      setSelectedImage(img)
     }
-  };
+  }
 
   const analyzeSelectedImage = async () => {
-    if (!selectedImage) return;
+    if (!selectedImage) return
+
+    setAnalyzing(true)
 
     try {
-      const imageUrl = selectedImage.image;
+      const imageUrl = selectedImage.image
 
-      const response = await fetch(imageUrl);
-      const blob = await response.blob();
-      const reader = new FileReader();
-      reader.readAsDataURL(blob);
+      const response = await fetch(imageUrl)
+      const blob = await response.blob()
+      const reader = new FileReader()
+      reader.readAsDataURL(blob)
 
       reader.onloadend = async () => {
-        const base64Image = reader.result.split(",")[1];
+        const base64Image = reader.result.split(",")[1]
 
         try {
           const res = await axios({
@@ -124,56 +133,62 @@ export default function MultiImageSelectionPage() {
             headers: {
               "Content-Type": "application/x-www-form-urlencoded",
             },
-          });
+          })
 
           if (res.data && Array.isArray(res.data.predictions)) {
-            const detectedIngredients = res.data.predictions.map(prediction => prediction.class);
+            const detectedIngredients = res.data.predictions.map((prediction) => prediction.class)
             // Combine the new ingredients with the existing ones
             setIngredients((prevIngredients) => {
-              const updatedIngredients = [...new Set([...prevIngredients, ...detectedIngredients])];
-              return updatedIngredients;
-            });
+              const updatedIngredients = [...new Set([...prevIngredients, ...detectedIngredients])]
+              return updatedIngredients
+            })
           } else {
-            setIngredients([]);
+            console.log("No ingredients detected")
           }
         } catch (error) {
-          console.error("Error with Roboflow API:", error.message);
+          console.error("Error with Roboflow API:", error.message)
+        } finally {
+          setAnalyzing(false)
         }
-      };
+      }
     } catch (error) {
-      console.error("Error processing image:", error);
+      console.error("Error processing image:", error)
+      setAnalyzing(false)
     }
-  };
+  }
 
   const handleDeleteIngredient = (ingredientToDelete) => {
-    setIngredients(ingredients.filter(ingredient => ingredient !== ingredientToDelete));
-  };
+    setIngredients(ingredients.filter((ingredient) => ingredient !== ingredientToDelete))
+  }
 
   const handleAddIngredient = () => {
     if (newIngredient && !ingredients.includes(newIngredient)) {
-      setIngredients(prevIngredients => {
+      setIngredients((prevIngredients) => {
         // Add new ingredient and remove duplicates
-        const updatedIngredients = [...prevIngredients, newIngredient];
-        return [...new Set(updatedIngredients)];
-      });
-      setNewIngredient("");
+        const updatedIngredients = [...prevIngredients, newIngredient]
+        return [...new Set(updatedIngredients)]
+      })
+      setNewIngredient("")
     }
-  };
+  }
 
   const handleSubmitIngredients = () => {
-    console.log("Submitting Ingredients: ", ingredients);
-    //save detected ingredients
-    localStorage.setItem("detectedIngredients", JSON.stringify(ingredients));
+    console.log("Submitting Ingredients: ", ingredients)
+    // Save detected ingredients
+    localStorage.setItem("detectedIngredients", JSON.stringify(ingredients))
     // Redirect to the recipes page
-    router.push("/recipes");
-  };
+    router.push("/recipes")
+  }
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-900 text-white">
-        <div className="text-2xl">Loading...</div>
+      <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-950">
+        <div className="flex flex-col items-center gap-2">
+          <div className="h-12 w-12 rounded-full border-4 border-t-blue-700 border-gray-200 animate-spin"></div>
+          <p className="text-gray-800 dark:text-gray-200 font-medium">Loading...</p>
+        </div>
       </div>
-    );
+    )
   }
 
   const mockImages =
@@ -184,109 +199,404 @@ export default function MultiImageSelectionPage() {
           { id: 2, image: "/placeholder.svg?height=300&width=300", date: "2023-03-09" },
           { id: 3, image: "/placeholder.svg?height=300&width=300", date: "2023-03-08" },
           { id: 4, image: "/placeholder.svg?height=300&width=300", date: "2023-03-07" },
-        ];
+        ]
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
-      <nav className="bg-gray-800 p-4 shadow-md sticky top-0 z-10">
-        <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-2xl font-bold">My Meal Pal</h1>
-          <div className="flex items-center space-x-6">
-            <Link href="/" className="text-white hover:text-blue-300">Home</Link>
-            <Link href="/meal-planner" className="text-white hover:text-blue-300">Meal Planner</Link>
-            <Link href="/nutrition" className="text-white hover:text-blue-300">Nutrition</Link>
-            <div className="relative settings-dropdown">
-              <button onClick={toggleSettings} className="p-2 rounded-full hover:bg-gray-700">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              </button>
-              {settingsOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg py-1 z-10">
-                  <div className="px-4 py-2 border-b border-gray-700">
-                    <p className="text-sm font-medium">Signed in as</p>
-                    <p className="text-sm font-bold truncate">{userName}</p>
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-950 text-gray-900 dark:text-gray-100">
+      {/* Header */}
+      <header className="sticky top-0 z-40 w-full border-b border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-md">
+        <div className="container mx-auto px-4">
+          <div className="flex h-16 items-center justify-between">
+            <div className="flex items-center">
+              <Link href="/" className="flex items-center gap-2">
+                <Zap className="h-6 w-6 text-blue-700 dark:text-blue-500" />
+                <span className="font-bold text-xl">MyMealPal</span>
+              </Link>
+            </div>
+
+            {/* Desktop Navigation */}
+            <nav className="hidden md:flex items-center space-x-6">
+              <Link
+                href="/meal-planner"
+                className="text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-blue-700 dark:hover:text-blue-400 transition-colors"
+              >
+                Meal Planner
+              </Link>
+              <Link
+                href="/recipes"
+                className="text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-blue-700 dark:hover:text-blue-400 transition-colors"
+              >
+                Recipes
+              </Link>
+              <Link
+                href="/upload-fridge"
+                className="text-sm font-medium text-blue-700 dark:text-blue-500 hover:text-blue-800 dark:hover:text-blue-400 transition-colors"
+              >
+                Fridge Scan
+              </Link>
+
+              {/* Settings Dropdown */}
+              <div className="relative settings-dropdown">
+                <button
+                  onClick={toggleSettings}
+                  className="flex items-center gap-1 text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-blue-700 dark:hover:text-blue-400 transition-colors"
+                >
+                  <User className="h-4 w-4" />
+                  <span>{userName || "Account"}</span>
+                  <ChevronDown className="h-4 w-4" />
+                </button>
+
+                {settingsOpen && (
+                  <div className="absolute right-0 mt-2 w-56 rounded-md bg-white dark:bg-gray-900 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50 border border-gray-200 dark:border-gray-700">
+                    <div className="py-2 px-3 border-b border-gray-200 dark:border-gray-700">
+                      <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Signed in as</p>
+                      <p className="text-sm font-semibold truncate text-gray-900 dark:text-white">{userName}</p>
+                    </div>
+                    <div className="py-1">
+                      <Link
+                        href="/profile"
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+                      >
+                        <User className="h-4 w-4" />
+                        Your Profile
+                      </Link>
+                      <Link
+                        href="/settings"
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+                      >
+                        <Settings className="h-4 w-4" />
+                        Settings
+                      </Link>
+                    </div>
+                    <div className="py-1 border-t border-gray-200 dark:border-gray-700">
+                      <button
+                        onClick={handleLogout}
+                        className="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        Sign out
+                      </button>
+                    </div>
                   </div>
-                  <Link href="/profile" className="block px-4 py-2 text-sm hover:bg-gray-700">Your Profile</Link>
-                  <Link href="/settings" className="block px-4 py-2 text-sm hover:bg-gray-700">Settings</Link>
-                  <button onClick={handleLogout} className="block w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-gray-700">
-                    Sign out
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </nav>
+                )}
+              </div>
+            </nav>
 
-      <main className="container mx-auto p-4 md:p-6">
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold">Select Your Fridge Image</h2>
-          <p className="text-lg">Choose one image for analysis.</p>
-        </div>
-
-        <div className="mb-4">
-          {selectedImage && (
-            <div className="flex items-center space-x-4">
-              <img src={selectedImage.image} alt="Selected Fridge" className="w-32 h-32 object-cover rounded-md" />
-              <button onClick={() => setSelectedImage(null)} className="text-red-500 hover:text-red-700">
-                Deselect
-              </button>
-            </div>
-          )}
-        </div>
-
-        <div className="grid grid-cols-3 md:grid-cols-4 gap-4">
-          {mockImages.map((image) => (
-            <div key={image.id} className={`cursor-pointer rounded-md ${selectedImage === image ? "border-4 border-blue-500" : ""}`} onClick={() => toggleImageSelection(image)}>
-              <Image src={image.image} alt={`Fridge Image ${image.id}`} width={300} height={300} className="w-full h-full object-cover rounded-md" />
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-8 flex justify-center">
-          <button onClick={analyzeSelectedImage} disabled={!selectedImage} className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-500 disabled:bg-gray-500">
-            Analyze Selected Image
-          </button>
-        </div>
-
-        <div className="mt-8">
-          <h3 className="text-xl font-semibold">Ingredients:</h3>
-          
-          <div className="flex overflow-x-auto space-x-4 mt-4">
-            {ingredients.length > 0 ? (
-              ingredients.map((ingredient, index) => (
-                <div key={index} className="flex-shrink-0 bg-gray-800 rounded-md px-4 py-2 text-white flex items-center justify-between">
-                  <span>{ingredient}</span>
-                  <button onClick={() => handleDeleteIngredient(ingredient)} className="ml-2 text-red-500 hover:text-red-700">Delete</button>
-                </div>
-              ))
-            ) : (
-              <p className="text-lg text-gray-400">No ingredients detected.</p>
-            )}
-          </div>
-
-          <div className="mt-4">
-            <input
-              type="text"
-              value={newIngredient}
-              onChange={(e) => setNewIngredient(e.target.value)}
-              placeholder="Add a new ingredient"
-              className="px-4 py-2 rounded-md w-full"
-            />
-            <button onClick={handleAddIngredient} className="mt-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-500">
-              Add Ingredient
+            {/* Mobile Menu Button */}
+            <button
+              onClick={toggleMobileMenu}
+              className="md:hidden inline-flex items-center justify-center rounded-md p-2 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none"
+            >
+              <Menu className="h-6 w-6" />
             </button>
           </div>
+        </div>
+      </header>
 
-          <div className="mt-4 flex justify-center">
-            <button onClick={handleSubmitIngredients} className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-500">
-              Submit Ingredients
+      {/* Mobile Menu */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-50 bg-gray-950/90 md:hidden">
+          <div className="fixed inset-y-0 right-0 w-full max-w-xs bg-white dark:bg-gray-900 shadow-lg p-6">
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-2">
+                <Zap className="h-6 w-6 text-blue-700 dark:text-blue-500" />
+                <span className="font-bold text-xl">MealPal</span>
+              </div>
+              <button
+                onClick={toggleMobileMenu}
+                className="rounded-md p-1 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+            <nav className="flex flex-col space-y-6">
+              <Link
+                href="/meal-planner"
+                className="flex items-center gap-3 text-base font-medium text-gray-800 dark:text-gray-200"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <Calendar className="h-5 w-5 text-blue-600 dark:text-blue-500" />
+                Meal Planner
+              </Link>
+              <Link
+                href="/recipes"
+                className="flex items-center gap-3 text-base font-medium text-gray-800 dark:text-gray-200"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <svg
+                  className="h-5 w-5 text-blue-600 dark:text-blue-500"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                  />
+                </svg>
+                Recipes
+              </Link>
+              <Link
+                href="/upload-fridge"
+                className="flex items-center gap-3 text-base font-medium text-blue-700 dark:text-blue-500"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <Camera className="h-5 w-5 text-blue-600 dark:text-blue-500" />
+                Fridge Scan
+              </Link>
+              <Link
+                href="/profile"
+                className="flex items-center gap-3 text-base font-medium text-gray-800 dark:text-gray-200"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <User className="h-5 w-5 text-blue-600 dark:text-blue-500" />
+                Your Profile
+              </Link>
+              <Link
+                href="/settings"
+                className="flex items-center gap-3 text-base font-medium text-gray-800 dark:text-gray-200"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <Settings className="h-5 w-5 text-blue-600 dark:text-blue-500" />
+                Settings
+              </Link>
+              <button
+                onClick={() => {
+                  handleLogout()
+                  setMobileMenuOpen(false)
+                }}
+                className="flex items-center gap-3 text-base font-medium text-red-600 dark:text-red-500"
+              >
+                <LogOut className="h-5 w-5" />
+                Sign out
+              </button>
+            </nav>
+          </div>
+        </div>
+      )}
+
+      <main className="container mx-auto px-4 py-8">
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Fridge Scan</h1>
+          <p className="text-gray-700 dark:text-gray-300">Select an image of your fridge contents for analysis</p>
+        </div>
+
+        {/* Selected Image Preview */}
+        {selectedImage && (
+          <div className="mb-6 bg-white dark:bg-gray-900 rounded-xl p-6 shadow-md border border-gray-300 dark:border-gray-700">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Selected Image</h2>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+              <div className="relative w-full sm:w-48 h-48 rounded-lg overflow-hidden border border-gray-300 dark:border-gray-700">
+                <Image
+                  src={selectedImage.image || "/placeholder.svg"}
+                  alt="Selected Fridge"
+                  fill
+                  className="object-cover"
+                />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
+                  <span className="font-medium">Date:</span> {new Date(selectedImage.date).toLocaleDateString()}
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setSelectedImage(null)}
+                    className="px-4 py-2 bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    Deselect
+                  </button>
+                  <button
+                    onClick={analyzeSelectedImage}
+                    disabled={analyzing}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-md text-white transition-colors ${
+                      analyzing ? "bg-gray-500 cursor-not-allowed" : "bg-blue-700 hover:bg-blue-800"
+                    }`}
+                  >
+                    {analyzing ? (
+                      <>
+                        <div className="h-4 w-4 rounded-full border-2 border-t-transparent border-white animate-spin"></div>
+                        Analyzing...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="h-4 w-4" />
+                        Analyze Image
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Image Gallery - Horizontal Scrolling with visible scrollbar */}
+        <div className="mb-8 bg-white dark:bg-gray-900 rounded-xl p-6 shadow-md border border-gray-300 dark:border-gray-700">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Your Fridge Images</h2>
+
+          <div className="relative">
+            <div className="overflow-x-auto pb-4 custom-scrollbar">
+              <div className="flex gap-4 min-w-max">
+                {mockImages.map((image) => (
+                  <div
+                    key={image.id}
+                    onClick={() => toggleImageSelection(image)}
+                    className={`relative cursor-pointer rounded-lg overflow-hidden border-2 transition-all flex-shrink-0 ${
+                      selectedImage === image
+                        ? "border-blue-600 dark:border-blue-500 shadow-md"
+                        : "border-gray-300 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-600"
+                    }`}
+                  >
+                    <div className="w-40 h-40 relative">
+                      <Image
+                        src={image.image || "/placeholder.svg"}
+                        alt={`Fridge Image ${image.id}`}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                    <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs p-1.5 truncate">
+                      {new Date(image.date).toLocaleDateString()}
+                    </div>
+                    {selectedImage === image && (
+                      <div className="absolute top-2 right-2 bg-blue-600 rounded-full p-1">
+                        <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Scroll indicator */}
+            <div className="absolute right-0 top-1/2 -translate-y-1/2 bg-gradient-to-l from-white dark:from-gray-900 to-transparent w-12 h-full pointer-events-none"></div>
+          </div>
+
+          <style jsx global>{`
+            /* Ultra-minimal scrollbar styling */
+            .custom-scrollbar::-webkit-scrollbar {
+              height: 2px;
+              display: block;
+            }
+
+            .custom-scrollbar::-webkit-scrollbar-track {
+              background: rgba(241, 241, 241, 0.2);
+              border-radius: 2px;
+            }
+
+            .custom-scrollbar::-webkit-scrollbar-thumb {
+              background: rgba(180, 180, 180, 0.3);
+              border-radius: 2px;
+            }
+
+            .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+              background: rgba(150, 150, 150, 0.4);
+            }
+
+            /* For Firefox */
+            .custom-scrollbar {
+              scrollbar-width: thin;
+              scrollbar-color: rgba(180, 180, 180, 0.3) transparent;
+            }
+
+            /* For dark mode */
+            @media (prefers-color-scheme: dark) {
+              .custom-scrollbar::-webkit-scrollbar-track {
+                background: rgba(30, 30, 30, 0.2);
+              }
+              
+              .custom-scrollbar::-webkit-scrollbar-thumb {
+                background: rgba(100, 100, 100, 0.3);
+              }
+              
+              .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                background: rgba(120, 120, 120, 0.4);
+              }
+              
+              .custom-scrollbar {
+                scrollbar-color: rgba(100, 100, 100, 0.3) transparent;
+              }
+            }
+          `}</style>
+        </div>
+
+        {/* Ingredients Section */}
+        <div className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-md border border-gray-300 dark:border-gray-700">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Detected Ingredients</h2>
+
+          {ingredients.length > 0 ? (
+            <div className="mb-6">
+              <div className="flex flex-wrap gap-2">
+                {ingredients.map((ingredient, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 px-3 py-1.5 rounded-full"
+                  >
+                    <span className="text-sm font-medium text-gray-800 dark:text-gray-200">{ingredient}</span>
+                    <button
+                      onClick={() => handleDeleteIngredient(ingredient)}
+                      className="text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-8 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-700 mb-6">
+              <Camera className="h-10 w-10 mx-auto text-gray-500 dark:text-gray-500 mb-2" />
+              <p className="text-gray-700 dark:text-gray-300 mb-1">No ingredients detected yet.</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Select an image and click "Analyze Image" to detect ingredients.
+              </p>
+            </div>
+          )}
+
+          <div className="mb-6">
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={newIngredient}
+                onChange={(e) => setNewIngredient(e.target.value)}
+                placeholder="Add a new ingredient"
+                className="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onKeyDown={(e) => e.key === "Enter" && handleAddIngredient()}
+              />
+              <button
+                onClick={handleAddIngredient}
+                disabled={!newIngredient}
+                className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${
+                  !newIngredient
+                    ? "bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                    : "bg-blue-700 hover:bg-blue-800 text-white"
+                }`}
+              >
+                <Plus className="h-4 w-4" />
+                Add
+              </button>
+            </div>
+          </div>
+
+          <div className="flex justify-center">
+            <button
+              onClick={handleSubmitIngredients}
+              disabled={ingredients.length === 0}
+              className={`flex items-center gap-2 px-6 py-2.5 rounded-md text-white font-medium transition-colors ${
+                ingredients.length === 0
+                  ? "bg-gray-400 dark:bg-gray-700 cursor-not-allowed"
+                  : "bg-blue-700 hover:bg-blue-800 shadow-sm"
+              }`}
+            >
+              Find Recipes with These Ingredients
             </button>
           </div>
         </div>
       </main>
     </div>
-  );
+  )
 }
