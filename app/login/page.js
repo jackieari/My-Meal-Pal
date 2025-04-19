@@ -33,13 +33,13 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white">
-      <div className="w-full max-w-md p-8 space-y-6 bg-gray-800 rounded-xl shadow-lg">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 text-gray-800">
+      <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-xl shadow-lg">
         <h1 className="text-3xl font-bold text-center">Login</h1>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="email" className="block mb-2">
+            <label htmlFor="email" className="block mb-2 text-gray-700">
               Email
             </label>
             <input
@@ -48,12 +48,12 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-3 py-2 bg-gray-700 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="block mb-2">
+            <label htmlFor="password" className="block mb-2 text-gray-700">
               Password
             </label>
             <input
@@ -62,25 +62,25 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full px-3 py-2 bg-gray-700 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           {error && <div className="text-red-500 text-sm text-center">{error}</div>}
 
-          <button type="submit" className="w-full py-2 bg-blue-500 rounded hover:bg-blue-600 transition duration-300">
+          <button type="submit" className="w-full py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300">
             Login
           </button>
         </form>
 
         <div className="text-center">
-          <Link href="/register" className="text-blue-400 hover:underline">
+          <Link href="/register" className="text-blue-600 hover:underline">
             Need an account? Register
           </Link>
         </div>
 
         <div className="flex gap-4 justify-center">
-          <Link href="/" className="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600">
+          <Link href="/" className="px-4 py-2 bg-gray-100 text-gray-800 rounded hover:bg-gray-200">
             Back to Home
           </Link>
         </div>

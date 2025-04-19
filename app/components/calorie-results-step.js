@@ -73,60 +73,72 @@ export function CalorieResultsStep({ calorieData, formData }) {
   return (
     <div className="space-y-6">
       <div className="text-center space-y-2">
-        <h3 className="text-lg font-medium">
+        <h3 className="text-lg font-medium text-gray-900 dark:text-white">
           {formData.name ? formData.name.split(" ")[0] + ", here's" : "Here's"} your personalized plan
         </h3>
-        <p className="text-muted-foreground">
+        <p className="text-gray-700 dark:text-gray-300">
           Based on your goals and body metrics, we've calculated your daily calorie target
         </p>
-        <p className="text-xs text-blue-600">
+        <p className="text-xs text-blue-700 dark:text-blue-500">
           This calorie target will be saved to your profile when you complete signup
         </p>
       </div>
 
       <div className="flex flex-col items-center justify-center py-6">
-        <div className="relative w-48 h-48 flex items-center justify-center rounded-full border-8 border-blue-100">
+        <div className="relative w-48 h-48 flex items-center justify-center rounded-full border-8 border-blue-100 dark:border-blue-900/30">
           <div className="text-center">
-            <div className="text-4xl font-bold text-blue-600">{dailyCalories}</div>
-            <div className="text-sm text-muted-foreground">DAILY CALORIES</div>
+            <div className="text-4xl font-bold text-blue-700 dark:text-blue-500">{dailyCalories}</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">DAILY CALORIES</div>
           </div>
         </div>
       </div>
 
-      <Card>
+      <Card className="border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900">
         <CardContent className="pt-6">
           <div className="space-y-4">
-            <h4 className="font-medium">Recommended Daily Macros</h4>
+            <h4 className="font-medium text-gray-900 dark:text-white">Recommended Daily Macros</h4>
 
             <div className="space-y-3">
               <div className="space-y-1">
                 <div className="flex justify-between text-sm">
-                  <span>Carbohydrates</span>
-                  <span className="font-medium">
+                  <span className="text-gray-800 dark:text-gray-200">Carbohydrates</span>
+                  <span className="font-medium text-gray-900 dark:text-white">
                     {carbs}g ({carbsPercent}%)
                   </span>
                 </div>
-                <Progress value={carbsPercent} className="h-2 bg-gray-100" indicatorClassName="bg-blue-500" />
+                <Progress
+                  value={carbsPercent}
+                  className="h-2 bg-gray-100 dark:bg-gray-800"
+                  indicatorClassName="bg-blue-700 dark:bg-blue-500"
+                />
               </div>
 
               <div className="space-y-1">
                 <div className="flex justify-between text-sm">
-                  <span>Protein</span>
-                  <span className="font-medium">
+                  <span className="text-gray-800 dark:text-gray-200">Protein</span>
+                  <span className="font-medium text-gray-900 dark:text-white">
                     {protein}g ({proteinPercent}%) - {proteinPerPound}g/lb
                   </span>
                 </div>
-                <Progress value={proteinPercent} className="h-2 bg-gray-100" indicatorClassName="bg-red-500" />
+                <Progress
+                  value={proteinPercent}
+                  className="h-2 bg-gray-100 dark:bg-gray-800"
+                  indicatorClassName="bg-red-600 dark:bg-red-500"
+                />
               </div>
 
               <div className="space-y-1">
                 <div className="flex justify-between text-sm">
-                  <span>Fat</span>
-                  <span className="font-medium">
+                  <span className="text-gray-800 dark:text-gray-200">Fat</span>
+                  <span className="font-medium text-gray-900 dark:text-white">
                     {fat}g ({fatPercent}%)
                   </span>
                 </div>
-                <Progress value={fatPercent} className="h-2 bg-gray-100" indicatorClassName="bg-yellow-500" />
+                <Progress
+                  value={fatPercent}
+                  className="h-2 bg-gray-100 dark:bg-gray-800"
+                  indicatorClassName="bg-yellow-600 dark:bg-yellow-500"
+                />
               </div>
             </div>
           </div>
@@ -134,29 +146,31 @@ export function CalorieResultsStep({ calorieData, formData }) {
       </Card>
 
       {/* Dietary Preferences Summary */}
-      <Card>
+      <Card className="border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900">
         <CardContent className="pt-6">
           <div className="space-y-4">
-            <h4 className="font-medium">Your Dietary Preferences</h4>
+            <h4 className="font-medium text-gray-900 dark:text-white">Your Dietary Preferences</h4>
 
             <div className="space-y-3">
               <div>
-                <span className="text-sm font-medium">Dietary Restrictions:</span>
-                <p className="text-sm">{formatListItems(formData.dietaryRestrictions)}</p>
+                <span className="text-sm font-medium text-gray-800 dark:text-gray-200">Dietary Restrictions:</span>
+                <p className="text-sm text-gray-700 dark:text-gray-300">
+                  {formatListItems(formData.dietaryRestrictions)}
+                </p>
               </div>
 
               <div>
-                <span className="text-sm font-medium">Food Allergens:</span>
-                <p className="text-sm">{formatListItems(formData.allergens)}</p>
+                <span className="text-sm font-medium text-gray-800 dark:text-gray-200">Food Allergens:</span>
+                <p className="text-sm text-gray-700 dark:text-gray-300">{formatListItems(formData.allergens)}</p>
               </div>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      <div className="bg-blue-50 p-4 rounded-lg text-sm">
-        <h4 className="font-medium mb-2">How we calculated your nutrition plan:</h4>
-        <p>
+      <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg text-sm border border-blue-100 dark:border-blue-900/30">
+        <h4 className="font-medium mb-2 text-gray-900 dark:text-white">How we calculated your nutrition plan:</h4>
+        <p className="text-gray-800 dark:text-gray-200">
           We used your age, gender, height, weight, and activity level to calculate your daily calorie needs.
           {weightDifference > 0 && (
             <span>
@@ -167,7 +181,7 @@ export function CalorieResultsStep({ calorieData, formData }) {
             </span>
           )}
         </p>
-        <p className="mt-2">
+        <p className="mt-2 text-gray-800 dark:text-gray-200">
           For your{" "}
           {formData.fitnessGoal === "maintain"
             ? "weight maintenance"
@@ -186,4 +200,3 @@ export function CalorieResultsStep({ calorieData, formData }) {
     </div>
   )
 }
-
