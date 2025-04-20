@@ -8,20 +8,18 @@ export default function ShoppingListPage() {
   const [selectedRecipeId, setSelectedRecipeId] = useState(null);
   const [recipeIngredients, setRecipeIngredients] = useState([]);
   const [userIngredients, setUserIngredients] = useState([]);
-  const [newIngredient, setNewIngredient] = useState(""); // For adding ingredients
-  const [finalIngredients, setFinalIngredients] = useState([]); // Store final ingredient list
-  const [groceryProducts, setGroceryProducts] = useState([]); // Store results from Spoonacular API
-  const [totalCost, setTotalCost] = useState(0); // Total cost of products
+  const [newIngredient, setNewIngredient] = useState("");
+  const [finalIngredients, setFinalIngredients] = useState([]);
+  const [groceryProducts, setGroceryProducts] = useState([]);
+  const [totalCost, setTotalCost] = useState(0);
 
-  const spoonacularApiKey = "b348b9e5a277b82e6c23f4850f6a5a8705e32bec"; 
+  const spoonacularApiKey = "6f3e35ad7c004cc28796a5e46e86931f";
 
-  // Load ingredients from localStorage
   useEffect(() => {
     const stored = localStorage.getItem("detectedIngredients");
     if (stored) setUserIngredients(JSON.parse(stored));
   }, []);
 
-  // Load liked recipes
   useEffect(() => {
     (async () => {
       try {
@@ -34,63 +32,43 @@ export default function ShoppingListPage() {
     })();
   }, []);
 
-  // Fetch recipe ingredients when a recipe is selected
   useEffect(() => {
     if (!selectedRecipeId) return;
 
     (async () => {
       try {
         const res = await fetch(
-          `https://api.spoonacular.com/recipes/${selectedRecipeId}/ingredientWidget.json?apiKey=6f3e35ad7c004cc28796a5e46e86931f`
+          `https://api.spoonacular.com/recipes/${selectedRecipeId}/ingredientWidget.json?apiKey=${spoonacularApiKey}`
         );
         const data = await res.json();
-        console.log("Fetched recipe ingredients:", data);
-
-        if (data.ingredients) {
-          const ingredientNames = data.ingredients.map((ingredient) => ingredient.name);
-          setRecipeIngredients((prevIngredients) => [
-            ...new Set([...prevIngredients, ...ingredientNames]),
-          ]);
-        } else {
-          setRecipeIngredients([]);
-        }
+        const ingredientNames = data.ingredients?.map((i) => i.name) || [];
+        setRecipeIngredients((prev) => [...new Set([...prev, ...ingredientNames])]);
       } catch (err) {
         console.error("Failed to fetch ingredients for recipe:", selectedRecipeId, err);
       }
     })();
   }, [selectedRecipeId]);
 
-  // Handle adding new ingredient
   const handleAddIngredient = () => {
     if (newIngredient && !recipeIngredients.includes(newIngredient)) {
-      setRecipeIngredients((prevIngredients) => [
-        ...new Set([...prevIngredients, newIngredient]),
-      ]);
-      setNewIngredient(""); // Clear input after adding
+      setRecipeIngredients((prev) => [...new Set([...prev, newIngredient])]);
+      setNewIngredient("");
     }
   };
 
-  // Handle deleting an ingredient
   const handleDeleteIngredient = (ingredientToDelete) => {
-    setRecipeIngredients((prevIngredients) =>
-      prevIngredients.filter((ingredient) => ingredient !== ingredientToDelete)
+    setRecipeIngredients((prev) =>
+      prev.filter((ingredient) => ingredient !== ingredientToDelete)
     );
   };
 
-  // Handle submit button to remove user ingredients from the final list
   const handleSubmit = () => {
-    // Remove any user ingredients from the recipe ingredients
-    const filteredIngredients = recipeIngredients.filter(
-      (ingredient) => !userIngredients.includes(ingredient)
-    );
-    setFinalIngredients(filteredIngredients); // Update the final ingredients list
+    const filtered = recipeIngredients.filter((ing) => !userIngredients.includes(ing));
+    setFinalIngredients(filtered);
   };
 
-  // Fetch grocery product data for final ingredients
   useEffect(() => {
     if (finalIngredients.length === 0) return;
-
-    console.log("Fetching grocery product data for ingredients:", finalIngredients);  // Log for debugging
 
     const fetchProductData = async () => {
       const productData = [];
@@ -101,21 +79,16 @@ export default function ShoppingListPage() {
             `https://api.spoonacular.com/food/products/search?query=${ingredient}&number=1&addProductInformation=true&apiKey=${spoonacularApiKey}`
           );
           const data = await res.json();
-          console.log("Fetched product data:", data);  // Log the fetched data
+          const product = data.products?.[0];
 
-          if (data.products && data.products.length > 0) {
-            const product = data.products[0];
-            
-            // Extract important badges
-            const badges = product.importantBadges || [];  // If no badges, use an empty array
-
+          if (product) {
             productData.push({
               name: product.title,
               price: product.price || 0,
               description: product.description || "No description available",
-              brand: product.brand || "No brand information",
+              brand: product.brand || "No brand info",
               details: product.productInformation || [],
-              badges: badges,  // Add badges to the product data
+              badges: product.importantBadges || [],
             });
           }
         } catch (err) {
@@ -124,171 +97,154 @@ export default function ShoppingListPage() {
       }
 
       setGroceryProducts(productData);
-      console.log("Updated grocery products:", productData);  // Log updated products list
-
-      const total = productData.reduce((sum, product) => sum + product.price, 0);
-      setTotalCost(total);
-      console.log("Total cost:", total);  // Log the total cost
+      setTotalCost(productData.reduce((sum, p) => sum + p.price, 0));
     };
 
     fetchProductData();
   }, [finalIngredients]);
 
-  // Remove duplicates from the user ingredients
   const uniqueUserIngredients = [...new Set(userIngredients)];
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
-      <nav className="bg-gray-800 p-4 shadow-md sticky top-0 z-10">
+    <div className="min-h-screen bg-gray-50 text-gray-900">
+      <nav className="bg-white shadow-md p-4 sticky top-0 z-10">
         <div className="container mx-auto flex justify-between items-center">
           <h1 className="text-2xl font-bold">Shopping List</h1>
         </div>
       </nav>
 
-      <main className="container mx-auto p-4 md:p-6">
-        {/* User's ingredients */}
-        <div className="mb-8">
-          <h2 className="text-3xl font-semibold mb-4">Your Ingredients</h2>
-          <div className="flex overflow-x-auto space-x-4">
+      <main className="container mx-auto px-4 py-8 space-y-10">
+        {/* User Ingredients */}
+        <section>
+          <h2 className="text-xl font-semibold mb-3">Your Ingredients</h2>
+          <div className="flex flex-wrap gap-2">
             {uniqueUserIngredients.length > 0 ? (
-              uniqueUserIngredients.map((ingredient, index) => (
-                <div
-                  key={index}
-                  className="bg-gray-800 rounded-md px-4 py-2 text-white flex items-center justify-between"
-                >
-                  <span>{ingredient}</span>
+              uniqueUserIngredients.map((ingredient, i) => (
+                <div key={i} className="bg-white px-4 py-2 rounded shadow text-sm">
+                  {ingredient}
                 </div>
               ))
             ) : (
-              <p className="text-lg text-gray-400">No ingredients detected.</p>
+              <p className="text-gray-500">No ingredients detected.</p>
             )}
           </div>
-        </div>
+        </section>
 
-        {/* Add ingredient input */}
-        <div className="mb-8">
-          <h2 className="text-3xl font-semibold mb-4">Add Ingredient</h2>
-          <input
-            type="text"
-            value={newIngredient}
-            onChange={(e) => setNewIngredient(e.target.value)}
-            className="bg-gray-800 rounded-md px-4 py-2 text-white w-full"
-            placeholder="Enter ingredient"
-          />
-          <button
-            onClick={handleAddIngredient}
-            className="bg-blue-500 text-white px-6 py-3 rounded-md mt-4"
-          >
-            Add Ingredient
-          </button>
-        </div>
+        {/* Add Ingredient */}
+        <section>
+          <h2 className="text-xl font-semibold mb-3">Add Ingredient</h2>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={newIngredient}
+              onChange={(e) => setNewIngredient(e.target.value)}
+              placeholder="Enter ingredient"
+              className="flex-grow px-4 py-2 border border-gray-300 rounded focus:ring-blue-500"
+            />
+            <button
+              onClick={handleAddIngredient}
+              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            >
+              Add
+            </button>
+          </div>
+        </section>
 
         {/* Liked Recipes */}
-        <div className="mb-8">
-          <h2 className="text-3xl font-semibold mb-4">Your Liked Recipes</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <section>
+          <h2 className="text-xl font-semibold mb-3">Your Liked Recipes</h2>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {likedRecipes.map((r) => (
               <div
                 key={r.id}
-                className={`border rounded-xl p-4 shadow-sm cursor-pointer hover:shadow-md transition ${
-                  selectedRecipeId === r.id ? "border-blue-500 ring-2 ring-blue-300" : ""
-                }`}
                 onClick={() => setSelectedRecipeId(r.id)}
+                className={`cursor-pointer bg-white p-4 rounded shadow hover:shadow-md transition ${
+                  selectedRecipeId === r.id ? "ring-2 ring-blue-400" : ""
+                }`}
               >
                 <img
                   src={r.image ?? `https://spoonacular.com/recipeImages/${r.id}-556x370.jpg`}
                   alt={r.title}
-                  className="w-full h-40 object-cover mb-2 rounded"
+                  className="w-full h-40 object-cover rounded mb-2"
                 />
                 <h3 className="text-lg font-medium">{r.title}</h3>
               </div>
             ))}
           </div>
-        </div>
+        </section>
 
-        {/* Ingredients for selected recipe */}
-        <div>
-          <h2 className="text-3xl font-semibold mb-4">Ingredients for Selected Recipes</h2>
-          <div className="flex overflow-x-auto space-x-4">
+        {/* Recipe Ingredients */}
+        <section>
+          <h2 className="text-xl font-semibold mb-3">Recipe Ingredients</h2>
+          <div className="flex flex-wrap gap-2">
             {recipeIngredients.length > 0 ? (
-              recipeIngredients.map((ingredient, index) => (
+              recipeIngredients.map((ingredient, i) => (
                 <div
-                  key={index}
-                  className="bg-gray-800 rounded-md px-4 py-2 text-white flex items-center justify-between"
+                  key={i}
+                  className="bg-white px-4 py-2 rounded shadow text-sm flex items-center gap-2"
                 >
-                  <span>{ingredient}</span>
+                  {ingredient}
                   <button
-                    className="text-red-500 ml-2"
                     onClick={() => handleDeleteIngredient(ingredient)}
+                    className="text-red-500 hover:text-red-600"
                   >
-                    X
+                    ×
                   </button>
                 </div>
               ))
             ) : (
-              <p className="text-lg text-gray-400">Loading ingredients…</p>
+              <p className="text-gray-500">No ingredients yet.</p>
             )}
           </div>
-        </div>
+        </section>
 
-        {/* Submit Button */}
-        <div className="mt-8">
+        <div className="text-center">
           <button
             onClick={handleSubmit}
-            className="bg-green-500 text-white px-6 py-3 rounded-md"
+            className="px-6 py-3 bg-green-500 text-white rounded hover:bg-green-600"
           >
             Submit
           </button>
         </div>
 
-        {/* Display Grocery Products and Total Cost */}
+        {/* Products */}
         {groceryProducts.length > 0 && (
-          <div className="mt-8">
-            <h2 className="text-3xl font-semibold mb-4">Grocery Products</h2>
+          <section>
+            <h2 className="text-xl font-semibold mb-3">Grocery Products</h2>
             <div className="space-y-6">
-              {groceryProducts.map((product, index) => (
-                <div
-                  key={index}
-                  className="bg-gray-800 rounded-xl p-6 shadow-md space-y-4"
-                >
-                  <h3 className="text-lg font-medium">{product.name}</h3>
-
-                  <ul className="text-sm text-gray-400 list-disc pl-5">
+              {groceryProducts.map((product, i) => (
+                <div key={i} className="bg-white p-6 rounded-xl shadow space-y-3">
+                  <h3 className="text-lg font-bold">{product.name}</h3>
+                  <ul className="list-disc text-sm text-gray-600 pl-5">
                     {product.details.length > 0 ? (
-                      product.details.map((detail, idx) => (
-                        <li key={idx}>{detail}</li>
-                      ))
+                      product.details.map((detail, idx) => <li key={idx}>{detail}</li>)
                     ) : (
-                      <li>No additional product information.</li>
+                      <li>No product information.</li>
                     )}
                   </ul>
-
-                  {/* Render badges */}
                   {product.badges.length > 0 && (
-                    <div className="mt-2 flex space-x-3">
+                    <div className="flex flex-wrap gap-2">
                       {product.badges.map((badge, idx) => (
                         <span
                           key={idx}
-                          className="bg-blue-500 text-white text-xs font-semibold px-2 py-1 rounded"
+                          className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded"
                         >
                           {badge.replace("_", " ").toUpperCase()}
                         </span>
                       ))}
                     </div>
                   )}
-
-                  <div className="flex justify-between items-center">
-                    <p className="text-lg">${product.price.toFixed(2)}</p>
-                    <p className="text-sm text-gray-400">{product.brand}</p>
+                  <div className="flex justify-between text-sm text-gray-700">
+                    <span>${product.price.toFixed(2)}</span>
+                    <span>{product.brand}</span>
                   </div>
                 </div>
               ))}
             </div>
-
-            <div className="mt-4 text-lg font-semibold">
-              Total Cost: ${totalCost.toFixed(2)}
+            <div className="mt-4 text-right font-semibold text-lg">
+              Total: ${totalCost.toFixed(2)}
             </div>
-          </div>
+          </section>
         )}
       </main>
     </div>
