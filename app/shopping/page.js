@@ -10,7 +10,8 @@ export default function ShoppingListPage() {
   const [userIngredients, setUserIngredients] = useState([]);
   const [newIngredient, setNewIngredient] = useState("");
   const [finalIngredients, setFinalIngredients] = useState([]);
-  const [groceryProducts, setGroceryProducts] = useState([]);
+  const [groceryProducts, setGroceryProducts] = useState({});
+  const [selectedProducts, setSelectedProducts] = useState({});
   const [totalCost, setTotalCost] = useState(0);
 
   const spoonacularApiKey = "6f3e35ad7c004cc28796a5e46e86931f";
@@ -71,37 +72,48 @@ export default function ShoppingListPage() {
     if (finalIngredients.length === 0) return;
 
     const fetchProductData = async () => {
-      const productData = [];
+      const allProductData = {};
 
       for (const ingredient of finalIngredients) {
         try {
           const res = await fetch(
-            `https://api.spoonacular.com/food/products/search?query=${ingredient}&number=1&addProductInformation=true&apiKey=${spoonacularApiKey}`
+            `https://api.spoonacular.com/food/products/search?query=${ingredient}&number=5&addProductInformation=true&apiKey=${spoonacularApiKey}`
           );
           const data = await res.json();
-          const product = data.products?.[0];
+          const products = data.products?.map((product) => ({
+            name: product.title,
+            price: product.price || 0,
+            description: product.description || "No description available",
+            brand: product.brand || "No brand info",
+            details: product.productInformation || [],
+            badges: product.importantBadges || [],
+          })) || [];
 
-          if (product) {
-            productData.push({
-              name: product.title,
-              price: product.price || 0,
-              description: product.description || "No description available",
-              brand: product.brand || "No brand info",
-              details: product.productInformation || [],
-              badges: product.importantBadges || [],
-            });
+          if (products.length > 0) {
+            allProductData[ingredient] = products;
           }
         } catch (err) {
-          console.error("Failed to fetch product for ingredient:", ingredient, err);
+          console.error("Failed to fetch products for ingredient:", ingredient, err);
         }
       }
 
-      setGroceryProducts(productData);
-      setTotalCost(productData.reduce((sum, p) => sum + p.price, 0));
+      setGroceryProducts(allProductData);
     };
 
     fetchProductData();
   }, [finalIngredients]);
+
+  useEffect(() => {
+    const total = Object.values(selectedProducts).reduce(
+      (sum, product) => sum + (product?.price || 0),
+      0
+    );
+    setTotalCost(total);
+  }, [selectedProducts]);
+
+  const handleSelectProduct = (ingredient, product) => {
+    setSelectedProducts((prev) => ({ ...prev, [ingredient]: product }));
+  };
 
   const uniqueUserIngredients = [...new Set(userIngredients)];
 
@@ -208,40 +220,51 @@ export default function ShoppingListPage() {
         </div>
 
         {/* Products */}
-        {groceryProducts.length > 0 && (
+        {Object.keys(groceryProducts).length > 0 && (
           <section>
             <h2 className="text-xl font-semibold mb-3">Grocery Products</h2>
-            <div className="space-y-6">
-              {groceryProducts.map((product, i) => (
-                <div key={i} className="bg-white p-6 rounded-xl shadow space-y-3">
-                  <h3 className="text-lg font-bold">{product.name}</h3>
-                  <ul className="list-disc text-sm text-gray-600 pl-5">
-                    {product.details.length > 0 ? (
-                      product.details.map((detail, idx) => <li key={idx}>{detail}</li>)
-                    ) : (
-                      <li>No product information.</li>
-                    )}
-                  </ul>
-                  {product.badges.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      {product.badges.map((badge, idx) => (
-                        <span
+            <div className="space-y-8">
+              {Object.entries(groceryProducts).map(([ingredient, products]) => (
+                <div key={ingredient}>
+                  <h3 className="text-lg font-bold mb-2">{ingredient}</h3>
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {products.map((product, idx) => {
+                      const isSelected = selectedProducts[ingredient]?.name === product.name;
+                      return (
+                        <div
                           key={idx}
-                          className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded"
+                          onClick={() => handleSelectProduct(ingredient, product)}
+                          className={`cursor-pointer bg-white p-4 rounded-xl shadow border-2 transition ${
+                            isSelected ? "border-green-500" : "border-transparent hover:border-blue-300"
+                          }`}
                         >
-                          {badge.replace("_", " ").toUpperCase()}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                  <div className="flex justify-between text-sm text-gray-700">
-                    <span>${product.price.toFixed(2)}</span>
-                    <span>{product.brand}</span>
+                          <h4 className="font-semibold">{product.name}</h4>
+                          <p className="text-sm text-gray-600">{product.brand}</p>
+                          <p className="text-sm mt-2">${product.price.toFixed(2)}</p>
+                          <div className="mt-2 text-xs text-gray-500 line-clamp-2">
+                            {product.description}
+                          </div>
+                          {product.badges.length > 0 && (
+                            <div className="mt-2 flex flex-wrap gap-1">
+                              {product.badges.map((badge, bIdx) => (
+                                <span
+                                  key={bIdx}
+                                  className="px-2 py-0.5 bg-blue-100 text-blue-800 text-xs rounded"
+                                >
+                                  {badge.replace("_", " ").toUpperCase()}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               ))}
             </div>
-            <div className="mt-4 text-right font-semibold text-lg">
+
+            <div className="mt-6 text-right font-semibold text-lg">
               Total: ${totalCost.toFixed(2)}
             </div>
           </section>
