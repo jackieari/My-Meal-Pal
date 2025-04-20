@@ -39,12 +39,12 @@ export async function POST(request) {
 
   const valid =
     Array.isArray(days) &&
-    days.length === 5 &&
+    days.length === 7 &&
     days.every(d => Array.isArray(d.meals) && d.meals.length >= 1);
 
   if (!valid) {
     return NextResponse.json(
-      { error: "Need 5 days and at least one meal per day" },
+      { error: "Need 7 days and at least one meal per day" },
       { status: 400 }
     );
   }

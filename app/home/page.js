@@ -6,7 +6,7 @@ import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { Calendar, Camera, ChevronDown, Info, LogOut, Menu, Settings, Upload, User, X, Zap } from "lucide-react"
 
-const dayCode = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][new Date().getDay()]
+const dayCode = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat","Sun"][new Date().getDay()]
 const num = (v) => Number.parseFloat(v)
 
 function HomePage() {

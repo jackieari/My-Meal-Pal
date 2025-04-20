@@ -15,7 +15,7 @@ const MealSchema = new mongoose.Schema({
 
 /* one weekday */
 const DaySchema = new mongoose.Schema({
-  day:   { type: String, enum: ["Mon","Tue","Wed","Thu","Fri"], required: true },
+  day:   { type: String, enum: ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"], required: true },
   meals: { type: [MealSchema], default: [], required: true }, // 3 meals
 });
 

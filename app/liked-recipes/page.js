@@ -45,7 +45,7 @@ export default function LikedRecipesPage() {
     setCreating(true)
 
     try {
-      const weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri"]
+      const weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri","Sat","Sun"]
 
       const days = weekdays.map((day) => ({
         day,
@@ -139,7 +139,7 @@ export default function LikedRecipesPage() {
           ) : (
             <>
               <Calendar className="h-4 w-4" />
-              Create Mon–Fri Plan
+              Create Mon–Sun Plan
             </>
           )}
         </button>
