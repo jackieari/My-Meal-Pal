@@ -1,12 +1,19 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Calendar, UtensilsCrossed, ChevronDown, ChevronUp } from "lucide-react"
+import { Calendar, UtensilsCrossed, ChevronDown, ChevronUp, RefreshCw, X, Check } from "lucide-react"
 
-export default function MealPlanPage() {
+export default function Page() {
   const [plan, setPlan] = useState(null)
   const [error, setError] = useState(null)
   const [openDay, setOpenDay] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [swapOptions, setSwapOptions] = useState({
+    isOpen: false,
+    day: null,
+    mealId: null,
+    options: [],
+  })
 
   // Toggle function to open/close a day
   const toggleDay = (day) => {
@@ -17,22 +24,175 @@ export default function MealPlanPage() {
     }
   }
 
-  useEffect(() => {
-    ;(async () => {
-      try {
-        const res = await fetch("/api/meal-plan")
-        const data = await res.json()
-        if (!data.success) throw new Error(data.error)
-        setPlan(data.plan)
+  // Fetch meal plan data
+  const fetchMealPlan = async () => {
+    try {
+      const res = await fetch("/api/meal-plan")
+      const data = await res.json()
+      if (!data.success) throw new Error(data.error)
+      setPlan(data.plan)
 
-        // Automatically open the first day when data loads
-        if (data.plan && data.plan.length > 0) {
-          setOpenDay(data.plan[0].day)
-        }
-      } catch (e) {
-        setError(e.message)
+      // Automatically open the first day when data loads
+      if (data.plan && data.plan.length > 0 && !openDay) {
+        setOpenDay(data.plan[0].day)
       }
-    })()
+    } catch (e) {
+      setError(e.message)
+    }
+  }
+
+  // Fetch swap options
+  const fetchSwapOptions = async (day, mealId) => {
+    setLoading(true)
+    try {
+      // We'll fetch options from a new endpoint
+      const res = await fetch("/api/meal-plan/swap-options", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ day, mealId }),
+      })
+
+      const data = await res.json()
+
+      if (!data.success) throw new Error(data.error || "Failed to get meal options")
+
+      // Open the swap options modal with the fetched options
+      setSwapOptions({
+        isOpen: true,
+        day,
+        mealId,
+        options: data.options || [],
+      })
+    } catch (e) {
+      setError(e.message || "Error getting meal options")
+      // If there's an error, we can simulate some options for demo purposes
+      // In a real app, you'd want to handle this differently
+      setSwapOptions({
+        isOpen: true,
+        day,
+        mealId,
+        options: generateFallbackOptions(),
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Generate fallback options for demo purposes
+  const generateFallbackOptions = () => {
+    return [
+      {
+        id: "option1",
+        title: "Grilled Chicken Salad",
+        image: "/placeholder.svg?height=200&width=300",
+        macros: {
+          calories: 350,
+          protein: 30,
+          carbs: 15,
+          fat: 18,
+        },
+      },
+      {
+        id: "option2",
+        title: "Vegetable Stir Fry",
+        image: "/placeholder.svg?height=200&width=300",
+        macros: {
+          calories: 280,
+          protein: 12,
+          carbs: 40,
+          fat: 8,
+        },
+      },
+      {
+        id: "option3",
+        title: "Salmon with Roasted Vegetables",
+        image: "/placeholder.svg?height=200&width=300",
+        macros: {
+          calories: 420,
+          protein: 35,
+          carbs: 20,
+          fat: 22,
+        },
+      },
+    ]
+  }
+
+  // Confirm swap with selected option
+  const confirmSwap = async (optionId) => {
+    setLoading(true)
+    try {
+      const res = await fetch("/api/meal-plan/confirm-swap", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          day: swapOptions.day,
+          mealId: swapOptions.mealId,
+          optionId,
+        }),
+      })
+
+      const data = await res.json()
+
+      if (!data.success) throw new Error(data.error || "Failed to swap meal")
+
+      // Update the plan with the new data
+      setPlan(data.plan)
+
+      // Close the options modal
+      closeSwapOptions()
+    } catch (e) {
+      setError(e.message || "Error swapping meal")
+
+      // For demo purposes, we'll simulate a successful swap
+      // In a real app, you'd want to handle this differently
+      simulateSuccessfulSwap(optionId)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Simulate a successful swap for demo purposes
+  const simulateSuccessfulSwap = (optionId) => {
+    if (!plan) return
+
+    const selectedOption = swapOptions.options.find((option) => option.id === optionId)
+    if (!selectedOption) return
+
+    const newPlan = [...plan]
+    const dayIndex = newPlan.findIndex((d) => d.day === swapOptions.day)
+
+    if (dayIndex >= 0) {
+      const mealIndex = newPlan[dayIndex].meals.findIndex((m) => m.id === swapOptions.mealId)
+
+      if (mealIndex >= 0) {
+        newPlan[dayIndex].meals[mealIndex] = {
+          ...selectedOption,
+          id: selectedOption.id.toString(),
+        }
+
+        setPlan(newPlan)
+      }
+    }
+
+    closeSwapOptions()
+  }
+
+  // Close the swap options modal
+  const closeSwapOptions = () => {
+    setSwapOptions({
+      isOpen: false,
+      day: null,
+      mealId: null,
+      options: [],
+    })
+  }
+
+  useEffect(() => {
+    fetchMealPlan()
   }, [])
 
   if (error)
@@ -127,19 +287,36 @@ export default function MealPlanPage() {
                         <img src={m.image || "/placeholder.svg"} alt={m.title} className="w-full h-full object-cover" />
                       </div>
                       <div className="p-4 flex-1">
-                        <h3 className="font-medium text-lg mb-2 text-gray-900 dark:text-white">{m.title}</h3>
+                        <div className="flex justify-between items-start mb-2">
+                          <h3 className="font-medium text-lg text-gray-900 dark:text-white">{m.title}</h3>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              fetchSwapOptions(d.day, m.id)
+                            }}
+                            disabled={loading}
+                            className={`ml-2 p-1.5 rounded-full text-gray-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:hover:text-blue-400 transition-colors ${
+                              loading ? "opacity-50 cursor-not-allowed" : ""
+                            }`}
+                            title="Swap for another meal"
+                          >
+                            <RefreshCw
+                              className={`h-4 w-4 ${loading && swapOptions.mealId === m.id ? "animate-spin" : ""}`}
+                            />
+                          </button>
+                        </div>
                         <div className="flex flex-wrap gap-2">
                           <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
-                            {m.macros.calories}
+                            {m.macros.calories} Cal
                           </span>
                           <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-800">
-                            {m.macros.protein} Protein
+                            {m.macros.protein}g Protein
                           </span>
                           <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
-                            {m.macros.carbs} Carbs
+                            {m.macros.carbs}g Carbs
                           </span>
                           <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-800">
-                            {m.macros.fat} Fat
+                            {m.macros.fat}g Fat
                           </span>
                         </div>
                       </div>
@@ -151,6 +328,82 @@ export default function MealPlanPage() {
           </div>
         ))}
       </div>
+
+      {/* Swap Options Modal */}
+      {swapOptions.isOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
+            <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white">Choose a replacement meal</h3>
+              <button
+                onClick={closeSwapOptions}
+                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="p-4 overflow-y-auto max-h-[70vh]">
+              <div className="space-y-4">
+                {swapOptions.options.map((option) => (
+                  <div
+                    key={option.id}
+                    className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden hover:border-blue-500 dark:hover:border-blue-500 transition-colors cursor-pointer"
+                    onClick={() => confirmSwap(option.id)}
+                  >
+                    <div className="flex flex-col sm:flex-row">
+                      <div className="sm:w-32 sm:h-32 h-48 relative">
+                        <img
+                          src={option.image || "/placeholder.svg"}
+                          alt={option.title}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="p-4 flex-1">
+                        <div className="flex justify-between items-start mb-3">
+                          <h4 className="font-medium text-lg text-gray-900 dark:text-white">{option.title}</h4>
+                          <button
+                            className="ml-2 p-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              confirmSwap(option.id)
+                            }}
+                          >
+                            <Check className="h-4 w-4" />
+                          </button>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                            {option.macros.calories} Cal
+                          </span>
+                          <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-800">
+                            {option.macros.protein}g Protein
+                          </span>
+                          <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
+                            {option.macros.carbs}g Carbs
+                          </span>
+                          <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-800">
+                            {option.macros.fat}g Fat
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex justify-end">
+              <button
+                onClick={closeSwapOptions}
+                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
