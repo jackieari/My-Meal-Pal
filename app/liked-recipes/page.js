@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Heart, Calendar, Loader2 } from "lucide-react"
+import Link from "next/link"
+import { ChevronLeft, Heart, Calendar, Loader2 } from "lucide-react"
 
 /* Extract a rounded nutrient value from Spoonacular data */
 function macro(recipe, name) {
@@ -115,6 +116,15 @@ export default function LikedRecipesPage() {
 
   /* ---------- UI ---------- */
   return (
+    <>
+    {/* ← Back to Home */}
+    <div className="py-4 px-6">
+      <Link href="/home" className="inline-flex items-center text-blue-600 hover:underline">
+        <ChevronLeft className="mr-2 h-5 w-5" />
+        Back to Home
+      </Link>
+    </div>
+
     <div className="max-w-6xl mx-auto p-4 md:p-8">
       <h1 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white flex items-center gap-2">
         <Heart className="h-6 w-6 text-blue-700 dark:text-blue-500" />
@@ -207,5 +217,6 @@ export default function LikedRecipesPage() {
         ))}
       </ul>
     </div>
+    </>
   )
 }
