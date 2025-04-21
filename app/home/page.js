@@ -194,16 +194,9 @@ function HomePage() {
         <div className="container mx-auto px-4">
           <div className="flex h-16 items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
-              <Zap className="h-6 w-6 text-blue-700 dark:text-blue-500" />
+              <Zap className="h-6 w-6 text-blue-800 dark:text-blue-500" />
               <span className="font-bold text-xl">MyMealPal</span>
             </Link>
-
-            <div className="flex items-center">
-              <Link href="/" className="flex items-center gap-2">
-                <Zap className="h-6 w-6 text-blue-700 dark:text-blue-500"/>
-                <span className="font-bold text-xl">MyMealPal</span>
-              </Link>
-            </div>
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center space-x-6">
@@ -226,13 +219,6 @@ function HomePage() {
                   className="text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-blue-700 dark:hover:text-blue-400 transition-colors"
               >
                 Liked Recipes
-              </Link>
-
-              <Link
-                  href="/meal-plan"
-                  className="text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-blue-700 dark:hover:text-blue-400 transition-colors"
-              >
-                Fridge Scan
               </Link>
 
               {/* If you don’t have a separate settings page, point this at /profile */}
