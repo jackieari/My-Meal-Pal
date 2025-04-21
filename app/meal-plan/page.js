@@ -1,7 +1,8 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Calendar, UtensilsCrossed, ChevronDown, ChevronUp, RefreshCw, X, Check } from "lucide-react"
+import Link from "next/link"
+import { Calendar, UtensilsCrossed, ChevronDown, ChevronUp, RefreshCw, X, Check, ChevronLeft } from "lucide-react"
 
 export default function Page() {
   const [plan, setPlan] = useState(null)
@@ -239,6 +240,17 @@ export default function Page() {
 
   return (
     <div className="max-w-3xl mx-auto p-4 md:p-8">
+      {/* ← Back to Home */}
+      <div className="py-4 px-6">
+        <Link
+            href="/home"
+            className="inline-flex items-center text-blue-600 hover:underline"
+        >
+          <ChevronLeft className="mr-1 h-5 w-5" />
+          Back to Home
+        </Link>
+      </div>
+
       <header className="mb-8">
         <h1 className="text-3xl font-bold flex items-center gap-2 text-gray-900 dark:text-white">
           <Calendar className="h-7 w-7 text-blue-700 dark:text-blue-500" />

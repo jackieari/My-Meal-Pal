@@ -4,14 +4,13 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
-import { Calendar, Camera, ChevronDown, Info, LogOut, Menu, Settings, Upload, User, X, Zap } from "lucide-react"
+import { Calendar, Camera, ChevronDown, Heart, Info, LogOut, Menu, Settings, Upload, User, X, Zap } from "lucide-react"
 
 const dayCode = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat","Sun"][new Date().getDay()]
 const num = (v) => Number.parseFloat(v)
 
 function HomePage() {
   const router = useRouter()
-
   const [userName, setUserName] = useState("")
   const [dietaryRestrictions, setDietaryRestrictions] = useState([])
   const [allergens, setAllergens] = useState([])
@@ -194,9 +193,14 @@ function HomePage() {
       <header className="sticky top-0 z-40 w-full border-b border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-md">
         <div className="container mx-auto px-4">
           <div className="flex h-16 items-center justify-between">
+            <Link href="/" className="flex items-center gap-2">
+              <Zap className="h-6 w-6 text-blue-700 dark:text-blue-500" />
+              <span className="font-bold text-xl">MyMealPal</span>
+            </Link>
+
             <div className="flex items-center">
               <Link href="/" className="flex items-center gap-2">
-                <Zap className="h-6 w-6 text-blue-700 dark:text-blue-500" />
+                <Zap className="h-6 w-6 text-blue-700 dark:text-blue-500"/>
                 <span className="font-bold text-xl">MyMealPal</span>
               </Link>
             </div>
@@ -204,77 +208,48 @@ function HomePage() {
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center space-x-6">
               <Link
-                href="/meal-planner"
-                className="text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-blue-700 dark:hover:text-blue-400 transition-colors"
+                  href="/meal-plan"
+                  className="text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-blue-700 dark:hover:text-blue-400 transition-colors"
               >
-                Meal Planner
+                Meal Plan
               </Link>
+
               <Link
-                href="/recipes"
-                className="text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-blue-700 dark:hover:text-blue-400 transition-colors"
+                  href="/recipes"
+                  className="text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-blue-700 dark:hover:text-blue-400 transition-colors"
               >
                 Recipes
               </Link>
+
               <Link
-                href="/upload-fridge"
-                className="text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-blue-700 dark:hover:text-blue-400 transition-colors"
+                  href="/liked-recipes"
+                  className="text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-blue-700 dark:hover:text-blue-400 transition-colors"
+              >
+                Liked Recipes
+              </Link>
+
+              <Link
+                  href="/meal-plan"
+                  className="text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-blue-700 dark:hover:text-blue-400 transition-colors"
               >
                 Fridge Scan
               </Link>
 
-              {/* Settings Dropdown */}
-              <div className="relative settings-dropdown">
-                <button
-                  onClick={toggleSettings}
-                  className="flex items-center gap-1 text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-blue-700 dark:hover:text-blue-400 transition-colors"
-                >
-                  <User className="h-4 w-4" />
-                  <span>{userName || "Account"}</span>
-                  <ChevronDown className="h-4 w-4" />
-                </button>
-
-                {settingsOpen && (
-                  <div className="absolute right-0 mt-2 w-56 rounded-md bg-white dark:bg-gray-900 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50 border border-gray-200 dark:border-gray-700">
-                    <div className="py-2 px-3 border-b border-gray-200 dark:border-gray-700">
-                      <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Signed in as</p>
-                      <p className="text-sm font-semibold truncate text-gray-900 dark:text-white">{userName}</p>
-                    </div>
-                    <div className="py-1">
-                      <Link
-                        href="/profile"
-                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
-                      >
-                        <User className="h-4 w-4" />
-                        Your Profile
-                      </Link>
-                      <Link
-                        href="/settings"
-                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
-                      >
-                        <Settings className="h-4 w-4" />
-                        Settings
-                      </Link>
-                    </div>
-                    <div className="py-1 border-t border-gray-200 dark:border-gray-700">
-                      <button
-                        onClick={handleLogout}
-                        className="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-800"
-                      >
-                        <LogOut className="h-4 w-4" />
-                        Sign out
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
+              {/* If you don’t have a separate settings page, point this at /profile */}
+              <Link
+                  href="/profile"
+                  className="text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-blue-700 dark:hover:text-blue-400 transition-colors"
+              >
+                Settings
+              </Link>
             </nav>
 
             {/* Mobile Menu Button */}
             <button
-              onClick={toggleMobileMenu}
-              className="md:hidden inline-flex items-center justify-center rounded-md p-2 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none"
+                onClick={toggleMobileMenu}
+                className="md:hidden inline-flex items-center justify-center rounded-md p-2 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none"
             >
-              <Menu className="h-6 w-6" />
+              <Menu className="h-6 w-6"/>
             </button>
           </div>
         </div>
@@ -282,112 +257,97 @@ function HomePage() {
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-50 bg-gray-950/90 md:hidden">
-          <div className="fixed inset-y-0 right-0 w-full max-w-xs bg-white dark:bg-gray-900 shadow-lg p-6">
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center gap-2">
-                <Zap className="h-6 w-6 text-blue-700 dark:text-blue-500" />
-                <span className="font-bold text-xl">MealPal</span>
-              </div>
-              <button
-                onClick={toggleMobileMenu}
-                className="rounded-md p-1 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
-              >
-                <X className="h-6 w-6" />
-              </button>
-            </div>
-            <nav className="flex flex-col space-y-6">
-              <Link
-                href="/meal-planner"
-                className="flex items-center gap-3 text-base font-medium text-gray-800 dark:text-gray-200"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <Calendar className="h-5 w-5 text-blue-600 dark:text-blue-500" />
-                Meal Planner
-              </Link>
-              <Link
-                href="/recipes"
-                className="flex items-center gap-3 text-base font-medium text-gray-800 dark:text-gray-200"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <svg
-                  className="h-5 w-5 text-blue-600 dark:text-blue-500"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
+          <div className="fixed inset-0 z-50 bg-gray-950/90 md:hidden">
+            <div className="fixed inset-y-0 right-0 w-full max-w-xs bg-white dark:bg-gray-900 shadow-lg p-6">
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-2">
+                  <Zap className="h-6 w-6 text-blue-700 dark:text-blue-500"/>
+                  <span className="font-bold text-xl">Home</span>
+                </div>
+                <button
+                    onClick={toggleMobileMenu}
+                    className="rounded-md p-1 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                  />
-                </svg>
-                Recipes
-              </Link>
-              <Link
-                href="/upload-fridge"
-                className="flex items-center gap-3 text-base font-medium text-gray-800 dark:text-gray-200"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <Camera className="h-5 w-5 text-blue-600 dark:text-blue-500" />
-                Fridge Scan
-              </Link>
-              <Link
-                href="/profile"
-                className="flex items-center gap-3 text-base font-medium text-gray-800 dark:text-gray-200"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <User className="h-5 w-5 text-blue-600 dark:text-blue-500" />
-                Your Profile
-              </Link>
-              <Link
-                href="/settings"
-                className="flex items-center gap-3 text-base font-medium text-gray-800 dark:text-gray-200"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <Settings className="h-5 w-5 text-blue-600 dark:text-blue-500" />
-                Settings
-              </Link>
-              <button
-                onClick={() => {
-                  handleLogout()
-                  setMobileMenuOpen(false)
-                }}
-                className="flex items-center gap-3 text-base font-medium text-red-600 dark:text-red-500"
-              >
-                <LogOut className="h-5 w-5" />
-                Sign out
-              </button>
-            </nav>
+                  <X className="h-6 w-6"/>
+                </button>
+              </div>
+
+              <nav className="flex flex-col space-y-6">
+                <Link
+                    href="/meal-plan"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-3 text-base font-medium text-gray-800 dark:text-gray-200"
+                >
+                  <Calendar className="h-5 w-5 text-blue-600 dark:text-blue-500"/>
+                  Meal Plan
+                </Link>
+
+                <Link
+                    href="/recipes"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-3 text-base font-medium text-gray-800 dark:text-gray-200"
+                >
+                  Recipes
+                </Link>
+
+                <Link
+                    href="/liked-recipes"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-3 text-base font-medium text-gray-800 dark:text-gray-200"
+                >
+                  {/* import { Heart } from "lucide-react" at top */}
+                  <Heart className="h-5 w-5 text-blue-600 dark:text-blue-500"/>
+                  Liked Recipes
+                </Link>
+
+                <Link
+                    href="/upload-fridge"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-3 text-base font-medium text-gray-800 dark:text-gray-200"
+                >
+                  <Camera className="h-5 w-5 text-blue-600 dark:text-blue-500"/>
+                  Fridge Scan
+                </Link>
+
+                <Link
+                    href="/profile"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-3 text-base font-medium text-gray-800 dark:text-gray-200"
+                >
+                  <Settings className="h-5 w-5 text-blue-600 dark:text-blue-500"/>
+                  Settings
+                </Link>
+              </nav>
+            </div>
           </div>
-        </div>
       )}
 
       <main className="container mx-auto px-4 py-8">
-        {/* Top Section - Summary Dashboard */}
-        <div className="mb-8 bg-white dark:bg-gray-900 rounded-xl p-6 shadow-md border border-gray-300 dark:border-gray-700">
-          <div className="flex flex-col md:flex-row gap-6">
-            {/* User Profile Summary */}
-            <div className="md:w-1/3 flex flex-col md:border-r md:dark:border-gray-700 pr-0 md:pr-6">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                  <User className="h-6 w-6 text-blue-700 dark:text-blue-500" />
-                </div>
-                <div>
-                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{userName || "Welcome"}</h2>
-                  <p className="text-sm text-gray-700 dark:text-gray-300">
-                    {calorieLimit ? `${calorieLimit} calories/day` : "Set your calorie goal"}
-                  </p>
-                </div>
-              </div>
+                {/* Top Section - Summary Dashboard */}
+                <div
+                    className="mb-8 bg-white dark:bg-gray-900 rounded-xl p-6 shadow-md border border-gray-300 dark:border-gray-700">
+                  <div className="flex flex-col md:flex-row gap-6">
+                    {/* User Profile Summary */}
+                    <div className="md:w-1/3 flex flex-col md:border-r md:dark:border-gray-700 pr-0 md:pr-6">
+                      <div className="flex items-center gap-4 mb-4">
+                        <div
+                            className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                          <User className="h-6 w-6 text-blue-700 dark:text-blue-500"/>
+                        </div>
+                        <div>
+                          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{userName || "Welcome"}</h2>
+                          <p className="text-sm text-gray-700 dark:text-gray-300">
+                            {calorieLimit ? `${calorieLimit} calories/day` : "Set your calorie goal"}
+                          </p>
+                        </div>
+                      </div>
 
-              <div className="flex flex-wrap gap-1.5 mb-4">
-                {dietaryRestrictions.length > 0 &&
-                  dietaryRestrictions.map((r, i) => (
-                    <span
-                      key={i}
-                      className="bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-gray-200 px-2 py-0.5 rounded-full text-xs font-medium"
+                      <div className="flex flex-wrap gap-1.5 mb-4">
+                        {dietaryRestrictions.length > 0 &&
+                            dietaryRestrictions.map((r, i) => (
+                                <span
+                                    key={i}
+                                    className="bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-gray-200 px-2 py-0.5 rounded-full text-xs font-medium"
                     >
                       {r}
                     </span>
@@ -483,7 +443,7 @@ function HomePage() {
                   {dayCode === "Sun" || dayCode === "Sat" ? "This Weekend's Meal Plan" : "Today's Meal Plan"}
                 </h2>
                 <Link
-                  href="/meal-planner"
+                  href="/meal-plan"
                   className="inline-flex items-center gap-1 text-sm font-medium text-blue-700 dark:text-blue-500 hover:text-blue-800 dark:hover:text-blue-400"
                 >
                   Plan Meals
@@ -520,7 +480,7 @@ function HomePage() {
                   <Calendar className="h-10 w-10 mx-auto text-gray-500 dark:text-gray-500 mb-2" />
                   <p className="text-gray-700 dark:text-gray-300 mb-3">No meal plan saved for today yet.</p>
                   <Link
-                    href="/meal-planner"
+                    href="/meal-plan"
                     className="inline-flex items-center justify-center rounded-md bg-blue-700 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                   >
                     Create Meal Plan

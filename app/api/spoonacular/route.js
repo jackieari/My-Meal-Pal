@@ -10,7 +10,7 @@ export async function POST(req) {
     const maxCarbs = body.maxCarbs;
     const maxCalories = body.maxCalories;
 
-    const apiKey = "6f3e35ad7c004cc28796a5e46e86931f";  // Ensure this is your actual API key
+    const apiKey = "761530a7a2d2482dac22f76af5ef6438";  // Ensure this is your actual API key
     const dietaryRestrictions = body.dietaryRestrictions || [];  // diet -> dietaryRestrictions
     const allergens = body.allergens || [];  // allergens -> intolerances
 
