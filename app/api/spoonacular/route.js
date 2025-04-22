@@ -10,19 +10,29 @@ export async function POST(req) {
     const maxCarbs = body.maxCarbs;
     const maxCalories = body.maxCalories;
 
-    const apiKey = "761530a7a2d2482dac22f76af5ef6438";  // Ensure this is your actual API key
-    const dietaryRestrictions = body.dietaryRestrictions || [];  // diet -> dietaryRestrictions
-    const allergens = body.allergens || [];  // allergens -> intolerances
+    const apiKey = "761530a7a2d2482dac22f76af5ef6438";  // Replace with env var in production
+    const dietaryRestrictions = body.dietaryRestrictions || [];
+    const allergens = body.allergens || [];
 
     const query = ingredients.join(",");
     let url = `https://api.spoonacular.com/recipes/complexSearch` +
         `?includeIngredients=${query}` +
         `&cuisine=${encodeURIComponent(cuisine)}` +
-        `&number=20` +  // Increased to allow some margin for post-filtering
+        `&number=20` +
         `&addRecipeInformation=true` +
         `&addRecipeInstructions=true` +
         `&addRecipeNutrition=true` +
         `&apiKey=${apiKey}`;
+
+    // ⬇️ ADD: diet and intolerances
+    if (dietaryRestrictions.length > 0) {
+        // Join multiple with comma (AND logic), or use pipe (|) if you want OR logic
+        url += `&diet=${encodeURIComponent(dietaryRestrictions.join(","))}`;
+    }
+
+    if (allergens.length > 0) {
+        url += `&intolerances=${encodeURIComponent(allergens.join(","))}`;
+    }
 
     if (maxReadyTime) {
         url += `&maxReadyTime=${maxReadyTime}`;
@@ -33,7 +43,6 @@ export async function POST(req) {
         const data = await res.json();
 
         const detailedRecipes = (data.results || []).filter(recipe => {
-            // Calories and carbs
             const nutrients = recipe.nutrition?.nutrients || [];
             const caloriesObj = nutrients.find(n => n.name === "Calories");
             const carbsObj = nutrients.find(n => n.name === "Carbohydrates");
@@ -51,7 +60,7 @@ export async function POST(req) {
             const calories = recipe.nutrition?.nutrients?.find(n => n.name === "Calories");
 
             return {
-                recipeId: recipe.id, // Ensure we pass recipeId here
+                recipeId: recipe.id,
                 title: recipe.title,
                 image: recipe.image,
                 url: recipe.sourceUrl,
