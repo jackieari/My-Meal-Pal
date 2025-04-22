@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
-import { Calendar, Camera, ChevronDown, Heart, Info, LogOut, Menu, Settings, Upload, User, X, Zap } from "lucide-react"
+import { Calendar, Camera, Heart, Info, Menu, Settings, Upload, User, X, Zap } from "lucide-react"
 
 const dayCode = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][new Date().getDay()]
 const num = (v) => Number.parseFloat(v)
@@ -26,6 +26,10 @@ function HomePage() {
 
   const [todayMeals, setTodayMeals] = useState([])
   const [totals, setTotals] = useState({ calories: 0, protein: 0, carbs: 0, fat: 0 })
+
+  // New state for recipe suggestions
+  const [recipeSuggestions, setRecipeSuggestions] = useState([])
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false)
 
   useEffect(() => {
     const fetchUserInfo = async () => {
@@ -94,6 +98,67 @@ function HomePage() {
       } catch {}
     })()
   }, [])
+
+  // New effect to fetch personalized recipe suggestions
+  useEffect(() => {
+    const fetchRecipeSuggestions = async () => {
+      if (!userName) return // Only fetch if user is logged in
+
+      setLoadingSuggestions(true)
+      try {
+        const res = await fetch("/api/recipe-suggestions", {
+          credentials: "include",
+        })
+
+        if (!res.ok) {
+          throw new Error("Failed to fetch recipe suggestions")
+        }
+
+        const data = await res.json()
+        if (data.success && data.suggestions) {
+          setRecipeSuggestions(data.suggestions)
+        }
+      } catch (error) {
+        console.error("Error fetching recipe suggestions:", error)
+        // Use fallback suggestions if API fails
+        setRecipeSuggestions(getFallbackSuggestions())
+      } finally {
+        setLoadingSuggestions(false)
+      }
+    }
+
+    fetchRecipeSuggestions()
+  }, [userName, dietaryRestrictions, allergens])
+
+  // Fallback suggestions if API fails
+  const getFallbackSuggestions = () => {
+    return [
+      {
+        id: 1,
+        title: "Mediterranean Salad",
+        image: "/placeholder.svg?height=200&width=300",
+        readyInMinutes: 15,
+        calories: 320,
+        protein: 12,
+        carbs: 25,
+        fat: 18,
+        matchedDietaryRestrictions: dietaryRestrictions,
+        matchedAllergens: allergens,
+      },
+      {
+        id: 2,
+        title: "Grilled Chicken Bowl",
+        image: "/placeholder.svg?height=200&width=300",
+        readyInMinutes: 25,
+        calories: 450,
+        protein: 35,
+        carbs: 40,
+        fat: 15,
+        matchedDietaryRestrictions: dietaryRestrictions,
+        matchedAllergens: allergens,
+      },
+    ]
+  }
 
   const handleImageChange = (e) => {
     const f = e.target.files[0]
@@ -201,30 +266,30 @@ function HomePage() {
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center space-x-6">
               <Link
-                  href="/meal-plan"
-                  className="text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-blue-700 dark:hover:text-blue-400 transition-colors"
+                href="/meal-plan"
+                className="text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-blue-700 dark:hover:text-blue-400 transition-colors"
               >
                 Meal Plan
               </Link>
 
               <Link
-                  href="/recipes"
-                  className="text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-blue-700 dark:hover:text-blue-400 transition-colors"
+                href="/recipes"
+                className="text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-blue-700 dark:hover:text-blue-400 transition-colors"
               >
                 Recipes
               </Link>
 
               <Link
-                  href="/liked-recipes"
-                  className="text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-blue-700 dark:hover:text-blue-400 transition-colors"
+                href="/liked-recipes"
+                className="text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-blue-700 dark:hover:text-blue-400 transition-colors"
               >
                 Liked Recipes
               </Link>
 
-              {/* If you don’t have a separate settings page, point this at /profile */}
+              {/* If you don't have a separate settings page, point this at /profile */}
               <Link
-                  href="/profile"
-                  className="text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-blue-700 dark:hover:text-blue-400 transition-colors"
+                href="/profile"
+                className="text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-blue-700 dark:hover:text-blue-400 transition-colors"
               >
                 Settings
               </Link>
@@ -232,10 +297,10 @@ function HomePage() {
 
             {/* Mobile Menu Button */}
             <button
-                onClick={toggleMobileMenu}
-                className="md:hidden inline-flex items-center justify-center rounded-md p-2 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none"
+              onClick={toggleMobileMenu}
+              className="md:hidden inline-flex items-center justify-center rounded-md p-2 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none"
             >
-              <Menu className="h-6 w-6"/>
+              <Menu className="h-6 w-6" />
             </button>
           </div>
         </div>
@@ -243,97 +308,94 @@ function HomePage() {
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-          <div className="fixed inset-0 z-50 bg-gray-950/90 md:hidden">
-            <div className="fixed inset-y-0 right-0 w-full max-w-xs bg-white dark:bg-gray-900 shadow-lg p-6">
-              <div className="flex items-center justify-between mb-8">
-                <div className="flex items-center gap-2">
-                  <Zap className="h-6 w-6 text-blue-700 dark:text-blue-500"/>
-                  <span className="font-bold text-xl">Home</span>
-                </div>
-                <button
-                    onClick={toggleMobileMenu}
-                    className="rounded-md p-1 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
-                >
-                  <X className="h-6 w-6"/>
-                </button>
+        <div className="fixed inset-0 z-50 bg-gray-950/90 md:hidden">
+          <div className="fixed inset-y-0 right-0 w-full max-w-xs bg-white dark:bg-gray-900 shadow-lg p-6">
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-2">
+                <Zap className="h-6 w-6 text-blue-700 dark:text-blue-500" />
+                <span className="font-bold text-xl">Home</span>
               </div>
-
-              <nav className="flex flex-col space-y-6">
-                <Link
-                    href="/meal-plan"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center gap-3 text-base font-medium text-gray-800 dark:text-gray-200"
-                >
-                  <Calendar className="h-5 w-5 text-blue-600 dark:text-blue-500"/>
-                  Meal Plan
-                </Link>
-
-                <Link
-                    href="/recipes"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center gap-3 text-base font-medium text-gray-800 dark:text-gray-200"
-                >
-                  Recipes
-                </Link>
-
-                <Link
-                    href="/liked-recipes"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center gap-3 text-base font-medium text-gray-800 dark:text-gray-200"
-                >
-                  {/* import { Heart } from "lucide-react" at top */}
-                  <Heart className="h-5 w-5 text-blue-600 dark:text-blue-500"/>
-                  Liked Recipes
-                </Link>
-
-                <Link
-                    href="/upload-fridge"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center gap-3 text-base font-medium text-gray-800 dark:text-gray-200"
-                >
-                  <Camera className="h-5 w-5 text-blue-600 dark:text-blue-500"/>
-                  Fridge Scan
-                </Link>
-
-                <Link
-                    href="/profile"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center gap-3 text-base font-medium text-gray-800 dark:text-gray-200"
-                >
-                  <Settings className="h-5 w-5 text-blue-600 dark:text-blue-500"/>
-                  Settings
-                </Link>
-              </nav>
+              <button
+                onClick={toggleMobileMenu}
+                className="rounded-md p-1 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+              >
+                <X className="h-6 w-6" />
+              </button>
             </div>
+
+            <nav className="flex flex-col space-y-6">
+              <Link
+                href="/meal-plan"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-3 text-base font-medium text-gray-800 dark:text-gray-200"
+              >
+                <Calendar className="h-5 w-5 text-blue-600 dark:text-blue-500" />
+                Meal Plan
+              </Link>
+
+              <Link
+                href="/recipes"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-3 text-base font-medium text-gray-800 dark:text-gray-200"
+              >
+                Recipes
+              </Link>
+
+              <Link
+                href="/liked-recipes"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-3 text-base font-medium text-gray-800 dark:text-gray-200"
+              >
+                <Heart className="h-5 w-5 text-blue-600 dark:text-blue-500" />
+                Liked Recipes
+              </Link>
+
+              <Link
+                href="/upload-fridge"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-3 text-base font-medium text-gray-800 dark:text-gray-200"
+              >
+                <Camera className="h-5 w-5 text-blue-600 dark:text-blue-500" />
+                Fridge Scan
+              </Link>
+
+              <Link
+                href="/profile"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-3 text-base font-medium text-gray-800 dark:text-gray-200"
+              >
+                <Settings className="h-5 w-5 text-blue-600 dark:text-blue-500" />
+                Settings
+              </Link>
+            </nav>
           </div>
+        </div>
       )}
 
       <main className="container mx-auto px-4 py-8">
-                {/* Top Section - Summary Dashboard */}
-                <div
-                    className="mb-8 bg-white dark:bg-gray-900 rounded-xl p-6 shadow-md border border-gray-300 dark:border-gray-700">
-                  <div className="flex flex-col md:flex-row gap-6">
-                    {/* User Profile Summary */}
-                    <div className="md:w-1/3 flex flex-col md:border-r md:dark:border-gray-700 pr-0 md:pr-6">
-                      <div className="flex items-center gap-4 mb-4">
-                        <div
-                            className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                          <User className="h-6 w-6 text-blue-700 dark:text-blue-500"/>
-                        </div>
-                        <div>
-                          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{userName || "Welcome"}</h2>
-                          <p className="text-sm text-gray-700 dark:text-gray-300">
-                            {calorieLimit ? `${calorieLimit} calories/day` : "Set your calorie goal"}
-                          </p>
-                        </div>
-                      </div>
+        {/* Top Section - Summary Dashboard */}
+        <div className="mb-8 bg-white dark:bg-gray-900 rounded-xl p-6 shadow-md border border-gray-300 dark:border-gray-700">
+          <div className="flex flex-col md:flex-row gap-6">
+            {/* User Profile Summary */}
+            <div className="md:w-1/3 flex flex-col md:border-r md:dark:border-gray-700 pr-0 md:pr-6">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                  <User className="h-6 w-6 text-blue-700 dark:text-blue-500" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{userName || "Welcome"}</h2>
+                  <p className="text-sm text-gray-700 dark:text-gray-300">
+                    {calorieLimit ? `${calorieLimit} calories/day` : "Set your calorie goal"}
+                  </p>
+                </div>
+              </div>
 
-                      <div className="flex flex-wrap gap-1.5 mb-4">
-                        {dietaryRestrictions.length > 0 &&
-                            dietaryRestrictions.map((r, i) => (
-                                <span
-                                    key={i}
-                                    className="bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-gray-200 px-2 py-0.5 rounded-full text-xs font-medium"
+              <div className="flex flex-wrap gap-1.5 mb-4">
+                {dietaryRestrictions.length > 0 &&
+                  dietaryRestrictions.map((r, i) => (
+                    <span
+                      key={i}
+                      className="bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-gray-200 px-2 py-0.5 rounded-full text-xs font-medium"
                     >
                       {r}
                     </span>
@@ -487,31 +549,83 @@ function HomePage() {
                 </Link>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-300 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-600 transition-colors">
-                  <div className="aspect-video bg-gray-300 dark:bg-gray-700 rounded-md mb-3"></div>
-                  <h3 className="font-medium mb-1 text-gray-900 dark:text-white">Mediterranean Salad</h3>
-                  <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
-                    Fresh and healthy option with olives and feta
-                  </p>
-                  <div className="flex justify-between text-xs font-medium">
-                    <span className="text-gray-700 dark:text-gray-300">320 calories</span>
-                    <span className="text-blue-700 dark:text-blue-500">15 min</span>
-                  </div>
+              {loadingSuggestions ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {[1, 2].map((i) => (
+                    <div
+                      key={i}
+                      className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-300 dark:border-gray-700"
+                    >
+                      <div className="aspect-video bg-gray-300 dark:bg-gray-700 rounded-md mb-3 animate-pulse"></div>
+                      <div className="h-5 bg-gray-300 dark:bg-gray-700 rounded w-3/4 mb-2 animate-pulse"></div>
+                      <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-full mb-2 animate-pulse"></div>
+                      <div className="flex justify-between">
+                        <div className="h-3 bg-gray-300 dark:bg-gray-700 rounded w-1/4 animate-pulse"></div>
+                        <div className="h-3 bg-gray-300 dark:bg-gray-700 rounded w-1/4 animate-pulse"></div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
+              ) : recipeSuggestions.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {recipeSuggestions.slice(0, 4).map((recipe) => (
+                    <Link
+                      href={`/recipes/${recipe.id}`}
+                      key={recipe.id}
+                      className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-300 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-600 transition-colors"
+                    >
+                      <div className="aspect-video bg-gray-300 dark:bg-gray-700 rounded-md mb-3 relative overflow-hidden">
+                        <Image
+                          src={recipe.image || "/placeholder.svg?height=200&width=300"}
+                          alt={recipe.title}
+                          fill
+                          className="object-cover"
+                        />
+                        {recipe.matchedDietaryRestrictions?.length > 0 && (
+                          <div className="absolute top-2 left-2 px-2 py-1 bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-300 text-xs font-medium rounded-full">
+                            {recipe.matchedDietaryRestrictions[0]}
+                          </div>
+                        )}
+                      </div>
+                      <h3 className="font-medium mb-1 text-gray-900 dark:text-white">{recipe.title}</h3>
+                      <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
+                        Matches your {dietaryRestrictions.length > 0 ? "dietary preferences" : "preferences"}
+                        {allergens.length > 0 ? " and allergen restrictions" : ""}
+                      </p>
+                      <div className="flex justify-between text-xs font-medium">
+                        <span className="text-gray-700 dark:text-gray-300">{Math.round(recipe.calories)} calories</span>
+                        <span className="text-blue-700 dark:text-blue-500">{recipe.readyInMinutes} min</span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-300 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-600 transition-colors">
+                    <div className="aspect-video bg-gray-300 dark:bg-gray-700 rounded-md mb-3"></div>
+                    <h3 className="font-medium mb-1 text-gray-900 dark:text-white">Mediterranean Salad</h3>
+                    <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
+                      Fresh and healthy option with olives and feta
+                    </p>
+                    <div className="flex justify-between text-xs font-medium">
+                      <span className="text-gray-700 dark:text-gray-300">320 calories</span>
+                      <span className="text-blue-700 dark:text-blue-500">15 min</span>
+                    </div>
+                  </div>
 
-                <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-300 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-600 transition-colors">
-                  <div className="aspect-video bg-gray-300 dark:bg-gray-700 rounded-md mb-3"></div>
-                  <h3 className="font-medium mb-1 text-gray-900 dark:text-white">Grilled Chicken Bowl</h3>
-                  <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
-                    High protein meal with quinoa and vegetables
-                  </p>
-                  <div className="flex justify-between text-xs font-medium">
-                    <span className="text-gray-700 dark:text-gray-300">450 calories</span>
-                    <span className="text-blue-700 dark:text-blue-500">25 min</span>
+                  <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-300 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-600 transition-colors">
+                    <div className="aspect-video bg-gray-300 dark:bg-gray-700 rounded-md mb-3"></div>
+                    <h3 className="font-medium mb-1 text-gray-900 dark:text-white">Grilled Chicken Bowl</h3>
+                    <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
+                      High protein meal with quinoa and vegetables
+                    </p>
+                    <div className="flex justify-between text-xs font-medium">
+                      <span className="text-gray-700 dark:text-gray-300">450 calories</span>
+                      <span className="text-blue-700 dark:text-blue-500">25 min</span>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
 
