@@ -37,7 +37,7 @@ export async function POST(request) {
   }
 
   // Fetch the selected recipe from Spoonacular
-  const apiKey = "6f3e35ad7c004cc28796a5e46e86931f";
+  const apiKey = "ac4c7b1e98a04d4b98af48492b8af972";
   const spoonRes = await fetch(
     `https://api.spoonacular.com/recipes/${optionId}/information?includeNutrition=true&apiKey=${apiKey}`,
   )
