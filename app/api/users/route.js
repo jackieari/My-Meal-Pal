@@ -1,20 +1,24 @@
 // app/api/users/route.js
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { connectToDatabase } from "@/lib/mongodb";  // ✅ named import
+import { connectToDatabase } from "@/lib/mongodb";
+import { calculateCalories } from "@/lib/calorie-calculator";
 import User from "@/models/User";
 
 export async function POST(request) {
   try {
-    // connect to MongoDB
     await connectToDatabase();
 
-    // parse body
-    const { name, email, password, nutritionalPreferences } = await request.json();
+    const {
+      name,
+      email,
+      password,
+      nutritionalPreferences = {},
+      bodyMetrics = {}
+    } = await request.json();
 
     // check for existing user
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
+    if (await User.findOne({ email })) {
       return NextResponse.json(
         { error: "User with this email already exists" },
         { status: 400 }
@@ -25,11 +29,15 @@ export async function POST(request) {
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
 
+    // compute calories & macros
+    const { dailyCalories, protein, carbs, fat } = calculateCalories(bodyMetrics);
+
     // build nutritional preferences
     const userNutritionalPreferences = {
-      dietaryRestrictions: nutritionalPreferences?.dietaryRestrictions || [],
-      allergens:               nutritionalPreferences?.allergens          || [],
-      calorieLimit:            nutritionalPreferences?.calorieLimit      ?? null,
+      dietaryRestrictions: nutritionalPreferences.dietaryRestrictions || [],
+      allergens:           nutritionalPreferences.allergens          || [],
+      calorieLimit:        dailyCalories,
+      macros: { protein, carbs, fat }
     };
 
     // create & save new user
@@ -38,15 +46,17 @@ export async function POST(request) {
       email,
       passwordHash,
       nutritionalPreferences: userNutritionalPreferences,
+      bodyMetrics
     });
     await user.save();
 
-    // prepare response payload (omit passwordHash)
+    // prepare response (omit passwordHash)
     const userResponse = {
       _id:                    user._id,
       name:                   user.name,
       email:                  user.email,
       nutritionalPreferences: user.nutritionalPreferences,
+      bodyMetrics:            user.bodyMetrics,
       createdAt:              user.createdAt,
     };
 
