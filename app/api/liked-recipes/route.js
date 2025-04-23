@@ -9,7 +9,7 @@ import User from "@/models/User";
 /* ---------- config ---------- */
 
 // ❗ put your actual key below
-const SPOONACULAR_KEY = "4f6d6230e6184879a44608721f7c950d";
+const SPOONACULAR_KEY = "f1baf1b23e83419c93a5fe9784633292";
 
 /* ---------- helpers ---------- */
 
