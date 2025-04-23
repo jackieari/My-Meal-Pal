@@ -37,7 +37,7 @@ export async function POST(request) {
   }
 
   // Fetch one random recipe from Spoonacular
-  const apiKey = "f1baf1b23e83419c93a5fe9784633292";
+  const apiKey = "ac4c7b1e98a04d4b98af48492b8af972";
   const spoonRes = await fetch(
     `https://api.spoonacular.com/recipes/random?number=1&apiKey=${apiKey}`
   )
