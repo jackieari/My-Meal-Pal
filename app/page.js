@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
 import { Calendar, Camera, Menu, X, Zap } from "lucide-react"
+import foodImg from "./assets/food.jpg"
 
 function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -171,7 +172,7 @@ function LandingPage() {
           <div className="md:w-1/2">
             <div className="relative h-64 md:h-96 w-full rounded-xl overflow-hidden shadow-xl border border-gray-300 dark:border-gray-700">
               <Image
-                src="/placeholder.svg?height=600&width=800"
+                src={foodImg} 
                 alt="Meal planning made easy"
                 fill
                 className="object-cover"
