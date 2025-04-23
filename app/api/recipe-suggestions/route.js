@@ -28,7 +28,7 @@ export async function GET() {
 
     // Build query parameters
     const params = new URLSearchParams({
-      apiKey: "6f3e35ad7c004cc28796a5e46e86931f",
+      apiKey: "d40d48757a0149da99cfcc4e1288ae62",
       number: "2", // Number of recipes to return
       addRecipeInformation: "true",
       fillIngredients: "true",

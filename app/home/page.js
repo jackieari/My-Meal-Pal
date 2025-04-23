@@ -286,6 +286,20 @@ function HomePage() {
                 Liked Recipes
               </Link>
 
+              <Link
+                href="/shopping"
+                className="text-sm font-medium text-gray-800 hover:text-blue-700 transition-colors"
+              >
+                Grocery Items
+              </Link>
+
+              <Link
+                  href="/custom"
+                  className="text-sm font-medium text-gray-800 hover:text-blue-700 transition-colors"
+              >
+                Custom Recipes
+              </Link>
+
               {/* If you don't have a separate settings page, point this at /profile */}
               <Link
                 href="/profile"

@@ -98,6 +98,23 @@ export default function CustomRecipes() {
     }
   };
 
+  const deleteRecipe = async (recipeId) => {
+    try {
+      const res = await fetch(`/api/custom-recipes/${recipeId}`, {
+        method: "DELETE",
+      });
+
+      if (res.ok) {
+        // Refresh the recipes list after deletion
+        fetchRecipes();
+      } else {
+        console.error("Failed to delete recipe");
+      }
+    } catch (err) {
+      console.error("Error deleting recipe:", err);
+    }
+  };
+
   // Filtered recipes based on search term
   const filteredRecipes = recipes.filter(
     (recipe) =>
@@ -225,24 +242,35 @@ export default function CustomRecipes() {
       {/* Recipe List (Side-by-side layout) */}
       <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredRecipes.length > 0 ? (
-          filteredRecipes.map((recipe) => (
-            <div
-              key={recipe._id}
-              className="border p-6 rounded-lg shadow-md bg-white"
-            >
-              <h3 className="text-2xl font-bold">{recipe.title}</h3>
-              <p className="text-sm text-gray-600 mt-2">{recipe.bio}</p>
-              <p className="mt-4">
-                <strong>Prep Time:</strong> {recipe.prepTime}
-              </p>
-              <p className="mt-2">
-                <strong>Ingredients:</strong> {recipe.ingredients.join(", ")}
-              </p>
-              <p className="mt-4">{recipe.instructions}</p>
-            </div>
-          ))
+            filteredRecipes.map((recipe) => (
+                <div
+                    key={recipe._id}
+                    className="border p-6 rounded-lg shadow-md bg-white"
+                >
+                  <div className="flex justify-between items-start">
+                    <h3 className="text-2xl font-bold">{recipe.title}</h3>
+                    <button
+                        onClick={() => deleteRecipe(recipe._id)}
+                        className="text-red-500 hover:text-red-700 p-2"
+                        aria-label="Delete recipe"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
+                  <p className="text-sm text-gray-600 mt-2">{recipe.bio}</p>
+                  <p className="mt-4">
+                    <strong>Prep Time:</strong> {recipe.prepTime}
+                  </p>
+                  <p className="mt-2">
+                    <strong>Ingredients:</strong> {recipe.ingredients.join(", ")}
+                  </p>
+                  <p className="mt-4">{recipe.instructions}</p>
+                </div>
+            ))
         ) : (
-          <p className="text-center text-gray-500">No recipes found.</p>
+            <p className="text-center text-gray-500">No recipes found.</p>
         )}
       </div>
     </div>
