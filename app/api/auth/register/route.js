@@ -1,66 +1,79 @@
-import { NextResponse } from "next/server";
-import bcrypt from "bcryptjs";
+// File: app/api/users/route.js
+import { NextResponse }      from "next/server";
+import bcrypt                from "bcryptjs";
 import { connectToDatabase } from "@/lib/mongodb";
-import User from "@/models/User";
+import { calculateCalories } from "@/lib/calorie-calculator";   // ← now imported
+import User                  from "@/models/User";
 
 export async function POST(request) {
   try {
-    // Connect to the database
     await connectToDatabase();
 
-    // Parse the request body
-    const body = await request.json();
-    const { name, email, password, nutritionalPreferences } = body;
+    const {
+      name,
+      email,
+      password,
+      nutritionalPreferences = {},
+      bodyMetrics = null      // ← allow metrics on signup
+    } = await request.json();
 
-    console.log("Registration attempt for:", email);
-
-    // Validate input
+    /* ---------- validation & duplicate check ---------- */
     if (!name || !email || !password) {
-      return NextResponse.json({ error: "Name, email, and password are required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Name, email, and password are required" },
+        { status: 400 }
+      );
     }
-
-    // Check if user already exists
-    const existingUser = await User.findOne({ email });
-
-    if (existingUser) {
-      console.log("User already exists:", email);
+    if (await User.findOne({ email })) {
       return NextResponse.json({ error: "Email already registered" }, { status: 409 });
     }
 
-    // Hash the password
-    const salt = await bcrypt.genSalt(10);
-    const passwordHash = await bcrypt.hash(password, salt);
+    /* ---------- hash password ---------- */
+    const passwordHash = await bcrypt.hash(password, await bcrypt.genSalt(10));
 
-    // Create a new user, ensuring nutritionalPreferences is included
-    const newUser = new User({
+    /* ---------- build prefs (+ auto-calculated macros) ---------- */
+    const prefs = {
+      dietaryRestrictions: nutritionalPreferences.dietaryRestrictions || [],
+      allergens:            nutritionalPreferences.allergens            || [],
+      calorieLimit:         nutritionalPreferences.calorieLimit         ?? null,
+      macros: {
+        protein: nutritionalPreferences.macros?.protein ?? 0,
+        carbs:   nutritionalPreferences.macros?.carbs   ?? 0,
+        fat:     nutritionalPreferences.macros?.fat     ?? 0,
+      },
+    };
+
+    if (bodyMetrics && typeof bodyMetrics === "object") {
+      const { dailyCalories, protein, carbs, fat } = calculateCalories(bodyMetrics);
+      prefs.calorieLimit = dailyCalories;
+      prefs.macros       = { protein, carbs, fat };
+    }
+
+    /* ---------- create & save user ---------- */
+    const newUser = await User.create({
       name,
       email,
       passwordHash,
-      nutritionalPreferences: nutritionalPreferences || {
-        dietaryRestrictions: [],
-        allergens: [],
-        calorieLimit: null,
-      },
+      nutritionalPreferences: prefs,
+      bodyMetrics: bodyMetrics || {},
     });
 
-    // Save the user to the database
-    await newUser.save();
-
-    console.log("Registration successful for:", email);
-    console.log("User nutritionalPreferences:", newUser.nutritionalPreferences);
-
-    // Return success response
-    return NextResponse.json({
-      message: "Registration successful",
-      user: {
-        id: newUser._id.toString(),
-        name: newUser.name,
-        email: newUser.email,
-        nutritionalPreferences: newUser.nutritionalPreferences,
+    /* ---------- response ---------- */
+    return NextResponse.json(
+      {
+        message: "Registration successful",
+        user: {
+          id        : newUser._id.toString(),
+          name      : newUser.name,
+          email     : newUser.email,
+          nutritionalPreferences: newUser.nutritionalPreferences,
+          bodyMetrics           : newUser.bodyMetrics,
+        },
       },
-    });
-  } catch (error) {
-    console.error("Registration error:", error);
+      { status: 201 }
+    );
+  } catch (err) {
+    console.error("Registration error:", err);
     return NextResponse.json({ error: "Registration failed" }, { status: 500 });
   }
 }
