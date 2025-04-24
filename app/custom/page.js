@@ -125,21 +125,21 @@ export default function CustomRecipes() {
   return (
     <div className="p-6 space-y-8">
       <button
-        className="flex items-center gap-2 text-blue-600 hover:text-blue-800 transition"
-        onClick={() => router.push("/home")}
+          className="flex items-center gap-2 px-4 py-2 border-2 border-gray-400 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-lg shadow-sm transition-all hover:shadow"
+          onClick={() => router.push("/home")}
       >
-        <ArrowLeft className="w-5 h-5" />
+        <ArrowLeft className="w-5 h-5"/>
         <span className="font-medium">Back to Home</span>
       </button>
 
       <div className="mt-4 text-center">
         <h1 className="text-3xl font-semibold">Custom Recipes</h1>
         {userEmail ? (
-          <p className="text-gray-700 mt-2">
-            <strong>Create and Save Your Custom Recipes!</strong>
-          </p>
+            <p className="text-gray-700 mt-2">
+              <strong>Create and Save Your Custom Recipes!</strong>
+            </p>
         ) : (
-          <p className="text-gray-500 mt-2">Fetching user info...</p>
+            <p className="text-gray-500 mt-2">Fetching user info...</p>
         )}
       </div>
 

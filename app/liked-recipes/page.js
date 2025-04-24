@@ -298,16 +298,19 @@ export default function LikedRecipesPage() {
     <>
       {/* Back link */}
       <div className="py-4 px-6">
-        <Link href="/home" className="inline-flex items-center text-blue-600 hover:underline">
-          <ChevronLeft className="mr-2 h-5 w-5" />
-          Back to Home
+        <Link
+            href="/home"
+            className="inline-flex items-center gap-2 px-4 py-2 border-2 border-gray-400 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-lg shadow-sm transition-all hover:shadow"
+        >
+          <ChevronLeft className="h-5 w-5"/>
+          <span className="font-medium">Back to Home</span>
         </Link>
       </div>
 
       <div className="max-w-7xl mx-auto p-4 md:p-8">
         {/* Page title */}
         <h1 className="text-2xl font-bold mb-6 flex items-center gap-2">
-          <Heart className="h-6 w-6 text-blue-700" />
+          <Heart className="h-6 w-6 text-blue-700"/>
           Your Liked Recipes
         </h1>
 
