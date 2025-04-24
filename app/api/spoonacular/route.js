@@ -10,7 +10,7 @@ export async function POST(req) {
     const maxCarbs = body.maxCarbs;
     const maxCalories = body.maxCalories;
 
-    const apiKey = "ac4c7b1e98a04d4b98af48492b8af972";  // Replace with env var in production
+    const apiKey = "d40d48757a0149da99cfcc4e1288ae62";  // Replace with env var in production
     const dietaryRestrictions = body.dietaryRestrictions || [];
     const allergens = body.allergens || [];
 
@@ -19,6 +19,7 @@ export async function POST(req) {
         `?includeIngredients=${query}` +
         `&cuisine=${encodeURIComponent(cuisine)}` +
         `&number=20` +
+        `&fillIngredients=true` +
         `&addRecipeInformation=true` +
         `&addRecipeInstructions=true` +
         `&addRecipeNutrition=true` +
@@ -68,9 +69,18 @@ export async function POST(req) {
                 nutrition: recipe.nutrition?.nutrients || [],
                 calories: calories?.amount ? `${Math.round(calories.amount)} kcal` : "N/A",
                 extendedIngredients: recipe.extendedIngredients || [],
+
+                usedIngredients: recipe.usedIngredients || [],
+                missedIngredients: recipe.missedIngredients || [],
+                usedIngredientCount: recipe.usedIngredientCount || 0,
+                missedIngredientCount: recipe.missedIngredientCount || 0,
             };
         });
 
+        if (detailedRecipes.length > 0) {
+            console.log("First recipe usedIngredients:", detailedRecipes[0].usedIngredients);
+            console.log("First recipe missedIngredients:", detailedRecipes[0].missedIngredients);
+        }
         return NextResponse.json({ success: true, recipes: detailedRecipes });
     } catch (error) {
         console.error("Spoonacular error:", error);

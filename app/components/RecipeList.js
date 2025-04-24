@@ -5,8 +5,9 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { Heart } from "lucide-react";
 
-export default function RecipeList({ recipes = [] }) {
+export default function RecipeList({ recipes = [], availableIngredients = [] }) {
   const [likedRecipes, setLikedRecipes] = useState({});
+  const [expandedIngredients, setExpandedIngredients] = useState({});
 
   useEffect(() => {
     const fetchLikedRecipes = async () => {
@@ -33,6 +34,34 @@ export default function RecipeList({ recipes = [] }) {
 
     fetchLikedRecipes();
   }, []);
+
+  const compareIngredients = (recipeIngredients) => {
+    if (!recipeIngredients || !Array.isArray(recipeIngredients)) {
+      return { have: [], need: [] };
+    }
+
+    const lowercaseAvailable = availableIngredients.map(ing => ing.toLowerCase());
+
+    const have = [];
+    const need = [];
+
+    recipeIngredients.forEach(ingredient => {
+      const ingredientName = ingredient.name || ingredient;
+
+      const found = lowercaseAvailable.some(avail =>
+          ingredientName.toLowerCase().includes(avail) ||
+          avail.includes(ingredientName.toLowerCase())
+      );
+
+      if (found) {
+        have.push(ingredientName);
+      } else {
+        need.push(ingredientName);
+      }
+    });
+
+    return { have, need };
+  };
 
   const toggleLike = async (recipeId) => {
     if (!recipeId) {
@@ -64,80 +93,178 @@ export default function RecipeList({ recipes = [] }) {
     }
   };
 
+  const toggleExpandIngredients = (recipeId, type) => {
+    setExpandedIngredients(prev => ({
+      ...prev,
+      [`${recipeId}-${type}`]: !prev[`${recipeId}-${type}`]
+    }));
+  };
+
   return (
-    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-      {recipes.map((recipe) => (
-        <div key={recipe.recipeId} className="bg-white text-black rounded-lg shadow-md overflow-hidden">
-          <Link href={recipe.url || "#"} passHref>
-            <div className="relative w-full h-48 cursor-pointer">
-              <Image
-                src={recipe.image || "/placeholder.svg"}
-                alt={recipe.title}
-                fill
-                className="object-cover"
-              />
-            </div>
-          </Link>
-          <div className="p-4">
-            <div className="flex justify-between items-start">
-              <h3 className="text-lg font-semibold">{recipe.title}</h3>
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  toggleLike(recipe.recipeId);  // Pass the correct recipeId here
-                }}
-                className="flex items-center justify-center p-2 transition-colors"
-                aria-label={likedRecipes[recipe.recipeId] ? "Unlike recipe" : "Like recipe"}
-              >
-                <Heart
-                  className={`w-5 h-5 ${
-                    likedRecipes[recipe.recipeId] ? "fill-rose-500 text-rose-500" : "text-gray-400 hover:text-rose-500"
-                  }`}
-                />
-              </button>
-            </div>
-            <p className="text-sm text-gray-600">
-              {recipe.usedIngredientCount} used / {recipe.missedIngredientCount} missing
-            </p>
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {recipes.map((recipe) => {
+          const recipeId = recipe.recipeId || recipe.id;
+          const { have, need } = compareIngredients(
+              recipe.extendedIngredients || recipe.ingredients ||
+              recipe.usedIngredients?.concat(recipe.missedIngredients) || []
+          );
 
-            {/* Display Ingredients Used */}
-            {recipe.usedIngredients && recipe.usedIngredients.length > 0 && (
-              <div className="mt-4">
-                <h4 className="text-lg font-medium">Ingredients:</h4>
-                <ul className="list-disc pl-6 space-y-2 mt-2 text-gray-800">
-                  {recipe.usedIngredients.map((ingredient, index) => (
-                    <li key={index}>{ingredient.name}</li>
-                  ))}
-                </ul>
+          const haveExpanded = expandedIngredients[`${recipeId}-have`];
+          const needExpanded = expandedIngredients[`${recipeId}-need`];
+
+        return (
+            <div key={recipe.recipeId} className="bg-white text-black rounded-lg shadow-md overflow-hidden">
+              <Link href={recipe.url || "#"} passHref>
+                <div className="relative w-full h-48 cursor-pointer">
+                  <Image
+                      src={recipe.image || "/placeholder.svg"}
+                      alt={recipe.title}
+                      fill
+                      className="object-cover"
+                  />
+                </div>
+              </Link>
+              <div className="p-4">
+                <div className="flex justify-between items-start">
+                  <h3 className="text-lg font-semibold">{recipe.title}</h3>
+                  <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        toggleLike(recipe.recipeId);
+                      }}
+                      className="flex items-center justify-center p-2 transition-colors"
+                      aria-label={likedRecipes[recipe.recipeId] ? "Unlike recipe" : "Like recipe"}
+                  >
+                    <Heart
+                        className={`w-5 h-5 ${
+                            likedRecipes[recipe.recipeId] ? "fill-rose-500 text-rose-500" : "text-gray-400 hover:text-rose-500"
+                        }`}
+                    />
+                  </button>
+                </div>
+
+                {/* Display Calories */}
+                {recipe.calories && (
+                    <p className="text-sm text-green-700 mt-3 pt-2 border-t border-gray-100">
+                      <strong>Calories:</strong> {recipe.calories}
+                    </p>
+                )}
+
+                {/* Display Basic Nutrition Info */}
+                {recipe.nutrition && recipe.nutrition.length > 0 && (
+                    <div className="mt-2 text-sm text-gray-700">
+                      <p className="font-medium mb-1">Nutrition:</p>
+                      <div className="flex flex-wrap gap-x-4">
+                        {recipe.nutrition
+                            .filter((n) => ["Fat", "Carbohydrates", "Protein"].includes(n.name))
+                            .map((nutrient) => (
+                                <span key={nutrient.name}>
+                          {nutrient.name}: {nutrient.amount}
+                                  {nutrient.unit}
+                        </span>
+                            ))}
+                      </div>
+                    </div>
+                )}
+
+                {availableIngredients.length > 0 && (
+                    <div className="mt-4 space-y-3 border-t border-gray-100 pt-3">
+                      <div>
+                        <h4 className="text-sm font-medium text-green-700 mb-1">
+                          Ingredients You Have ({have.length})
+                        </h4>
+
+                        {have.length > 0 ? (
+                            <div className="text-sm text-gray-600">
+                              {haveExpanded ? (
+                                  <div>
+                                    <ul className="list-disc pl-5 mb-1">
+                                      {have.map((ingredient, index) => (
+                                          <li key={index} className="mb-0.5">{ingredient}</li>
+                                      ))}
+                                    </ul>
+                                    {/* Only show "Show less" button if there are more than 3 ingredients */}
+                                    {have.length > 3 && (
+                                        <button
+                                            onClick={() => toggleExpandIngredients(recipeId, 'have')}
+                                            className="text-blue-600 hover:text-blue-800 text-xs font-medium flex items-center mt-1"
+                                        >
+                                          Show less <ChevronUp className="h-3 w-3 ml-1" />
+                                        </button>
+                                    )}
+                                  </div>
+                              ) : (
+                                  /* Collapsed view showing only first 3 ingredients */
+                                  <div>
+                                    {have.slice(0, 3).join(", ")}
+                                    {/* Only show "+X more" button if there are more than 3 ingredients */}
+                                    {have.length > 3 && (
+                                        <button
+                                            onClick={() => toggleExpandIngredients(recipeId, 'have')}
+                                            className="text-blue-600 hover:text-blue-800 text-xs font-medium inline-flex items-center ml-1"
+                                        >
+                                          +{have.length - 3} more <ChevronDown className="h-3 w-3 ml-1" />
+                                        </button>
+                                    )}
+                                  </div>
+                              )}
+                            </div>
+                        ) : (
+                            <div className="text-sm text-gray-500 italic">None of your ingredients match this recipe</div>
+                        )}
+                      </div>
+
+                      {/* Ingredients you need */}
+                      <div>
+                        <h4 className="text-sm font-medium text-amber-700 mb-1">
+                          Ingredients You Need ({need.length})
+                        </h4>
+
+                        {need.length > 0 ? (
+                            <div className="text-sm text-gray-600">
+                              {needExpanded ? (
+                                  <div>
+                                    <ul className="list-disc pl-5 mb-1">
+                                      {need.map((ingredient, index) => (
+                                          <li key={index} className="mb-0.5">{ingredient}</li>
+                                      ))}
+                                    </ul>
+                                    {/* Only show "Show less" button if there are more than 3 ingredients */}
+                                    {need.length > 3 && (
+                                        <button
+                                            onClick={() => toggleExpandIngredients(recipeId, 'need')}
+                                            className="text-blue-600 hover:text-blue-800 text-xs font-medium flex items-center mt-1"
+                                        >
+                                          Show less ▲
+                                        </button>
+                                    )}
+                                  </div>
+                              ) : (
+                                  /* Collapsed view showing only first 3 ingredients */
+                                  <div>
+                                    {need.slice(0, 3).join(", ")}
+                                    {/* Only show "+X more" button if there are more than 3 ingredients */}
+                                    {need.length > 3 && (
+                                        <button
+                                            onClick={() => toggleExpandIngredients(recipeId, 'need')}
+                                            className="text-blue-600 hover:text-blue-800 text-xs font-medium inline-flex items-center ml-1"
+                                        >
+                                          +{need.length - 3} more ▼
+                                        </button>
+                                    )}
+                                  </div>
+                              )}
+                            </div>
+                        ) : (
+                            <div className="text-sm text-gray-500 italic">You have all needed ingredients!</div>
+                        )}
+                      </div>
+                    </div>
+                )}
               </div>
-            )}
-
-            {/* Display Calories */}
-            {recipe.calories && (
-              <p className="text-sm text-green-700 mt-2">
-                <strong>Calories:</strong> {recipe.calories}
-              </p>
-            )}
-
-            {/* Display Basic Nutrition Info */}
-            {recipe.nutrition && recipe.nutrition.length > 0 && (
-              <div className="mt-2 text-sm text-gray-700">
-                <p className="font-medium mb-1">Nutrition:</p>
-                <ul className="list-disc pl-5 space-y-1">
-                  {recipe.nutrition
-                    .filter((n) => ["Fat", "Carbohydrates", "Protein"].includes(n.name))
-                    .map((nutrient) => (
-                      <li key={nutrient.name}>
-                        {nutrient.name}: {nutrient.amount}
-                        {nutrient.unit}
-                      </li>
-                    ))}
-                </ul>
-              </div>
-            )}
-          </div>
-        </div>
-      ))}
-    </div>
+            </div>
+        );
+        })}
+      </div>
   );
 }

@@ -269,7 +269,10 @@ export default function ResultsClient() {
       {/* Recipe Results */}
       <section>
         <h3 className="text-2xl font-semibold mb-4">Recipes You Can Make</h3>
-        <RecipeList recipes={recipes} />
+        <RecipeList
+            recipes={recipes}
+            availableIngredients={ingredients}
+        />
       </section>
     </div>
   );
