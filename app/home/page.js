@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { useRouter, usePathname } from "next/navigation"
-import { Calendar, Camera, ChevronDown, Home, Info, Menu, Settings, Upload, User, X, Zap } from "lucide-react"
+import { Calendar, Camera, ChevronDown, Home, Info, LogOut, Menu, Upload, User, X, Zap } from "lucide-react"
 
 const dayCode = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][new Date().getDay()]
 const num = (v) => Number.parseFloat(v)
@@ -222,7 +222,7 @@ function HomePage() {
     localStorage.removeItem("token")
     localStorage.removeItem("access-token")
     sessionStorage.removeItem("user")
-    router.push("/login")
+    router.push("/")
   }
 
   const toggleSettings = () => setSettingsOpen(!settingsOpen)
@@ -351,15 +351,52 @@ function HomePage() {
 
             {/* Right side - User menu */}
             <div className="flex items-center gap-2">
-              <Link
-                href="/profile"
-                className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-              >
-                <div className="w-7 h-7 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                  <User className="h-4 w-4 text-blue-700 dark:text-blue-500" />
-                </div>
-                <span className="text-sm font-medium">{userName || "Profile"}</span>
-              </Link>
+              <div className="relative settings-dropdown">
+                <button
+                  onClick={toggleSettings}
+                  className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                  aria-expanded={settingsOpen}
+                  aria-haspopup="true"
+                >
+                  <div className="w-7 h-7 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                    <User className="h-4 w-4 text-blue-700 dark:text-blue-500" />
+                  </div>
+                  <span className="text-sm font-medium">{userName || "Profile"}</span>
+                </button>
+
+                {settingsOpen && (
+                  <div className="absolute right-0 mt-2 w-56 rounded-md bg-white dark:bg-gray-800 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+                    <div
+                      className="py-1 border-b border-gray-200 dark:border-gray-700"
+                      role="menu"
+                      aria-orientation="vertical"
+                    >
+                      <Link
+                        href="/profile"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                        role="menuitem"
+                        onClick={() => setSettingsOpen(false)}
+                      >
+                        <User className="h-4 w-4 mr-3 text-blue-600 dark:text-blue-500" />
+                        Update Your Profile
+                      </Link>
+                    </div>
+                    <div className="py-1">
+                      <button
+                        onClick={() => {
+                          handleLogout()
+                          setSettingsOpen(false)
+                        }}
+                        className="flex w-full items-center px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+                        role="menuitem"
+                      >
+                        <LogOut className="h-4 w-4 mr-3" />
+                        Sign out
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
 
               {/* Mobile Menu Button */}
               <button
@@ -466,8 +503,8 @@ function HomePage() {
                   }}
                   className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                 >
-                  <Settings className="h-5 w-5" />
-                  <span>Log out</span>
+                  <LogOut className="h-5 w-5" />
+                  <span>Sign out</span>
                 </button>
               </div>
             </div>
