@@ -293,10 +293,7 @@ function HomePage() {
                 Grocery Items
               </Link>
 
-              <Link
-                  href="/custom"
-                  className="text-sm font-medium text-gray-800 hover:text-blue-700 transition-colors"
-              >
+              <Link href="/custom" className="text-sm font-medium text-gray-800 hover:text-blue-700 transition-colors">
                 Custom Recipes
               </Link>
 
@@ -516,40 +513,60 @@ function HomePage() {
               </div>
 
               {todayMeals.length ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {todayMeals.map((m, i) => (
-                        <div
-                            key={m.id}
-                            className="bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-600 transition-colors p-4"
-                        >
-                          <div className="flex items-center justify-between mb-3">
-                            <h3 className="font-medium text-blue-700 dark:text-blue-500">Meal {i + 1}</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {(() => {
+                    // Group meals by title
+                    const groupedMeals = todayMeals.reduce((acc, meal) => {
+                      const existingMeal = acc.find((m) => m.title === meal.title)
+                      if (existingMeal) {
+                        existingMeal.count += 1
+                      } else {
+                        acc.push({ ...meal, count: 1 })
+                      }
+                      return acc
+                    }, [])
+
+                    return groupedMeals.map((m, i) => (
+                      <div
+                        key={m.id}
+                        className="bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-600 transition-colors p-4 flex flex-col"
+                      >
+                        <div className="flex items-center justify-between mb-3">
+                          <h3 className="font-medium text-blue-700 dark:text-blue-500">Meal {i + 1}</h3>
+                          <div className="flex items-center gap-2">
+                            {m.count > 1 && (
+                              <span className="text-xs font-medium px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded-full">
+                                {m.count}x per day
+                              </span>
+                            )}
                             <span className="text-xs font-medium px-2 py-0.5 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-full">
-            {m.macros.calories}
-          </span>
-                          </div>
-
-                          <p className="text-gray-900 dark:text-white font-medium mb-4">{m.title}</p>
-
-                          <div className="flex justify-between text-xs text-gray-700 dark:text-gray-300 border-t border-gray-200 dark:border-gray-700 pt-3">
-                            <span>Protein: {m.macros.protein}</span>
-                            <span>Carbs: {m.macros.carbs}</span>
-                            <span>Fat: {m.macros.fat}</span>
+                              {m.macros.calories}
+                            </span>
                           </div>
                         </div>
-                    ))}
-                  </div>
+
+                        <p className="text-gray-900 dark:text-white font-medium mb-auto">{m.title}</p>
+
+                        <div className="flex justify-between text-xs text-gray-700 dark:text-gray-300 border-t border-gray-200 dark:border-gray-700 pt-3 mt-3">
+                          <span>Protein: {m.macros.protein}</span>
+                          <span>Carbs: {m.macros.carbs}</span>
+                          <span>Fat: {m.macros.fat}</span>
+                        </div>
+                      </div>
+                    ))
+                  })()}
+                </div>
               ) : (
-                  <div className="text-center py-8 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-700">
-                    <Calendar className="h-10 w-10 mx-auto text-gray-500 dark:text-gray-500 mb-2" />
-                    <p className="text-gray-700 dark:text-gray-300 mb-3">No meal plan saved for today yet.</p>
-                    <Link
-                        href="/meal-plan"
-                        className="inline-flex items-center justify-center rounded-md bg-blue-700 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-                    >
-                      Create Meal Plan
-                    </Link>
-                  </div>
+                <div className="text-center py-8 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-700">
+                  <Calendar className="h-10 w-10 mx-auto text-gray-500 dark:text-gray-500 mb-2" />
+                  <p className="text-gray-700 dark:text-gray-300 mb-3">No meal plan saved for today yet.</p>
+                  <Link
+                    href="/meal-plan"
+                    className="inline-flex items-center justify-center rounded-md bg-blue-700 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                  >
+                    Create Meal Plan
+                  </Link>
+                </div>
               )}
             </div>
 
