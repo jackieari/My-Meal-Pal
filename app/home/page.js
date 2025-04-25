@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { useRouter, usePathname } from "next/navigation"
-import { Calendar, Camera, ChevronDown, Home, Info, LogOut, Menu, Upload, User, X, Zap } from "lucide-react"
+import { Calendar, Camera, ChevronDown, Info, LogOut, Menu, Upload, User, X, Zap } from "lucide-react"
 
 const dayCode = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][new Date().getDay()]
 const num = (v) => Number.parseFloat(v)
@@ -269,7 +269,7 @@ function HomePage() {
         <div className="container mx-auto px-4">
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center">
-              <Link href="/" className="flex items-center gap-2 mr-8">
+              <Link href="/home" className="flex items-center gap-2 mr-8">
                 <div className="bg-gradient-to-r from-blue-600 to-blue-800 dark:from-blue-500 dark:to-blue-700 rounded-lg p-1.5">
                   <Zap className="h-5 w-5 text-white" />
                 </div>
@@ -280,10 +280,6 @@ function HomePage() {
 
               {/* Desktop Navigation */}
               <nav className="hidden lg:flex items-center space-x-1">
-                <NavLink href="/" isActive={isActive("/")} icon={<Home className="h-4 w-4" />}>
-                  Home
-                </NavLink>
-
                 <NavLink href="/meal-plan" isActive={isActive("/meal-plan")} icon={<Calendar className="h-4 w-4" />}>
                   Meal Plan
                 </NavLink>
@@ -378,7 +374,7 @@ function HomePage() {
                         onClick={() => setSettingsOpen(false)}
                       >
                         <User className="h-4 w-4 mr-3 text-blue-600 dark:text-blue-500" />
-                        Update Your Profile
+                        Your Profile
                       </Link>
                     </div>
                     <div className="py-1">
@@ -456,10 +452,6 @@ function HomePage() {
               {/* Navigation links */}
               <nav className="flex-1 overflow-y-auto p-4">
                 <div className="space-y-1">
-                  <MobileNavLink href="/" icon={<Home className="h-5 w-5" />} onClick={() => setMobileMenuOpen(false)}>
-                    Home
-                  </MobileNavLink>
-
                   <MobileNavLink
                     href="/meal-plan"
                     icon={<Calendar className="h-5 w-5" />}
