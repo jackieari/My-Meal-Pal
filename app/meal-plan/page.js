@@ -76,6 +76,9 @@ export default function Page() {
   const toggleMobileMenu = () => setMobileMenuOpen(!mobileMenuOpen)
   const toggleDropdown = () => setDropdownOpen(!dropdownOpen)
 
+  // In the Page component, add this line near the top with the other constants
+  const currentDay = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][new Date().getDay()]
+
   /* ---------- helpers ---------- */
   /**
    * Aggregate identical meals so repeated recipes are shown once with a servings badge.
@@ -100,6 +103,7 @@ export default function Page() {
     setOpenDay((prev) => (prev === day ? null : day))
   }
 
+  // Replace the fetchMealPlan function with this updated version
   // Fetch meal plan data
   const fetchMealPlan = async () => {
     try {
@@ -108,9 +112,16 @@ export default function Page() {
       if (!data.success) throw new Error(data.error)
       setPlan(data.plan)
 
-      // Automatically open the first day when data loads
-      if (data.plan && data.plan.length > 0 && !openDay) {
-        setOpenDay(data.plan[0].day)
+      // Automatically open the current day when data loads
+      if (data.plan && data.plan.length > 0) {
+        // Check if current day exists in the plan
+        const dayExists = data.plan.some((day) => day.day === currentDay)
+        if (dayExists) {
+          setOpenDay(currentDay)
+        } else {
+          // Fall back to the first day if current day isn't in the plan
+          setOpenDay(data.plan[0].day)
+        }
       }
     } catch (e) {
       setError(e.message)
@@ -761,3 +772,4 @@ export default function Page() {
     </div>
   )
 }
+g
