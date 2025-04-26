@@ -856,14 +856,6 @@ function HomePage() {
                     {uploadStatus}
                   </p>
                 )}
-
-                <div className="mt-2 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg p-3 flex items-start gap-2">
-                  <Info className="h-4 w-4 text-gray-700 dark:text-gray-300 mt-0.5 shrink-0" />
-                  <p className="text-xs text-gray-800 dark:text-gray-200">
-                    <span className="font-semibold">Coming Soon:</span> AI-powered ingredient recognition and
-                    personalized recipe suggestions based on your dietary preferences.
-                  </p>
-                </div>
               </div>
             </div>
 
@@ -901,13 +893,6 @@ function HomePage() {
                     <div className="h-2.5 bg-blue-600 dark:bg-blue-500 rounded-full" style={{ width: "85%" }}></div>
                   </div>
                 </div>
-
-                <Link
-                  href="/progress"
-                  className="block text-center text-sm font-medium text-blue-700 dark:text-blue-500 hover:text-blue-800 dark:hover:text-blue-400 mt-4"
-                >
-                  View detailed progress →
-                </Link>
               </div>
             </div>
           </div>

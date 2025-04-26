@@ -64,7 +64,7 @@ export default function Page() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [dropdownOpen, setDropdownOpen] = useState(false)
-
+  const [categorizedPlan, setCategorizedPlan] = useState(null)
   const router = useRouter()
   const pathname = usePathname()
 
@@ -98,6 +98,16 @@ export default function Page() {
     return Object.values(map)
   }
 
+  function splitMealsRandomly(meals) {
+  const shuffled = [...meals].sort(() => Math.random() - 0.5)
+  const result = {
+    breakfast: shuffled[0] ? [shuffled[0]] : [],
+    lunch: shuffled[1] ? [shuffled[1]] : [],
+    dinner: shuffled.slice(2),
+  }
+  return result
+}
+
   // Toggle function to open/close a day
   const toggleDay = (day) => {
     setOpenDay((prev) => (prev === day ? null : day))
@@ -111,6 +121,14 @@ export default function Page() {
       const data = await res.json()
       if (!data.success) throw new Error(data.error)
       setPlan(data.plan)
+
+      const categorized = data.plan.map((day) => {
+        const meals = aggregateMeals(day.meals)
+        const categorizedMeals = splitMealsRandomly(meals)
+        return { ...day, categorizedMeals }
+      })
+      setCategorizedPlan(categorized)
+
 
       // Automatically open the current day when data loads
       if (data.plan && data.plan.length > 0) {
@@ -596,8 +614,8 @@ export default function Page() {
             </header>
 
             <div className="space-y-4">
-              {plan.map((d) => {
-                const meals = aggregateMeals(d.meals) // *** aggregated ***
+              {categorizedPlan.map((d) => {
+                 const categorizedMeals = d.categorizedMeals
                 return (
                   <div
                     key={d.day}
@@ -627,61 +645,60 @@ export default function Page() {
                       }`}
                     >
                       <div className="p-4 space-y-3 bg-gray-50 dark:bg-gray-800">
-                        {meals.map((m) => (
-                          <div
-                            key={m.id || m.title}
-                            className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden transition-all hover:shadow-md"
-                          >
-                            <div className="flex flex-col sm:flex-row">
-                              <div className="sm:w-24 sm:h-24 h-40 relative">
-                                <img
-                                  src={m.image || "/placeholder.svg"}
-                                  alt={m.title}
-                                  className="w-full h-full object-cover"
-                                />
-                              </div>
-                              <div className="p-4 flex-1">
-                                <div className="flex justify-between items-start mb-2">
-                                  <div className="flex items-center gap-2">
-                                    <h3 className="font-medium text-lg text-gray-900 dark:text-white">{m.title}</h3>
-                                    {m.servings > 1 && (
-                                      <span className="rounded-full bg-zinc-200 dark:bg-zinc-700 px-2 py-0.5 text-xs font-medium text-gray-700 dark:text-gray-200">
-                                        x{m.servings}
-                                      </span>
-                                    )}
+                        {["breakfast", "lunch", "dinner"].map((mealType) => (
+                          <div key={mealType}>
+                            <h4 className="text-md font-semibold text-gray-700 dark:text-gray-300 capitalize mb-1">{mealType}</h4>
+                            {categorizedMeals[mealType].map((m) => (
+                              <div
+                                key={m.id || m.title}
+                                className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden transition-all hover:shadow-md mb-3"
+                              >
+                                <div className="flex flex-col sm:flex-row">
+                                  <div className="sm:w-24 sm:h-24 h-40 relative">
+                                    <img src={m.image || "/placeholder.svg"} alt={m.title} className="w-full h-full object-cover" />
                                   </div>
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation()
-                                      fetchSwapOptions(d.day, m.id)
-                                    }}
-                                    disabled={loading}
-                                    className={`ml-2 p-1.5 rounded-full text-gray-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:hover:text-blue-400 transition-colors ${
-                                      loading ? "opacity-50 cursor-not-allowed" : ""
-                                    }`}
-                                    title="Swap for another meal"
-                                  >
-                                    <RefreshCw
-                                      className={`h-4 w-4 ${loading && swapOptions.mealId === m.id ? "animate-spin" : ""}`}
-                                    />
-                                  </button>
-                                </div>
-                                <div className="flex flex-wrap gap-2">
-                                  <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
-                                    {m.macros.calories} Cal
-                                  </span>
-                                  <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-800">
-                                    {m.macros.protein}g Protein
-                                  </span>
-                                  <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
-                                    {m.macros.carbs}g Carbs
-                                  </span>
-                                  <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-800">
-                                    {m.macros.fat}g Fat
-                                  </span>
+                                  <div className="p-4 flex-1">
+                                    <div className="flex justify-between items-start mb-2">
+                                      <div className="flex items-center gap-2">
+                                        <h3 className="font-medium text-lg text-gray-900 dark:text-white">{m.title}</h3>
+                                        {m.servings > 1 && (
+                                          <span className="rounded-full bg-zinc-200 dark:bg-zinc-700 px-2 py-0.5 text-xs font-medium text-gray-700 dark:text-gray-200">
+                                            x{m.servings}
+                                          </span>
+                                        )}
+                                      </div>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation()
+                                          fetchSwapOptions(d.day, m.id)
+                                        }}
+                                        disabled={loading}
+                                        className={`ml-2 p-1.5 rounded-full text-gray-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:hover:text-blue-400 transition-colors ${
+                                          loading ? "opacity-50 cursor-not-allowed" : ""
+                                        }`}
+                                        title="Swap for another meal"
+                                      >
+                                        <RefreshCw className={`h-4 w-4 ${loading && swapOptions.mealId === m.id ? "animate-spin" : ""}`} />
+                                      </button>
+                                    </div>
+                                    <div className="flex flex-wrap gap-2">
+                                      <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                                        {m.macros.calories} Cal
+                                      </span>
+                                      <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-800">
+                                        {m.macros.protein}g Protein
+                                      </span>
+                                      <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
+                                        {m.macros.carbs}g Carbs
+                                      </span>
+                                      <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-800">
+                                        {m.macros.fat}g Fat
+                                      </span>
+                                    </div>
+                                  </div>
                                 </div>
                               </div>
-                            </div>
+                            ))}
                           </div>
                         ))}
                       </div>
