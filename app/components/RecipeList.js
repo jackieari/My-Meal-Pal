@@ -8,6 +8,58 @@ import { Heart } from "lucide-react";
 export default function RecipeList({ recipes = [], availableIngredients = [] }) {
   const [likedRecipes, setLikedRecipes] = useState({});
   const [expandedIngredients, setExpandedIngredients] = useState({});
+  const [processedRecipes, setProcessedRecipes] = useState([]);
+
+  useEffect(() => {
+    // Filter out recipes with zero matching ingredients
+    const filteredRecipes = recipes.filter(recipe => {
+      const ingredients = recipe.extendedIngredients ||
+          recipe.ingredients ||
+          recipe.usedIngredients?.concat(recipe.missedIngredients) || [];
+
+      // Check if the recipe has any matching ingredients
+      const { have } = compareIngredients(ingredients);
+      return have.length > 0; // Only keep recipes with at least one matching ingredient
+    });
+
+    // Sort recipes by the number of matching ingredients (most matches first)
+    const sortedRecipes = [...filteredRecipes].sort((a, b) => {
+      const aIngredients = a.extendedIngredients ||
+          a.ingredients ||
+          a.usedIngredients?.concat(a.missedIngredients) || [];
+
+      const bIngredients = b.extendedIngredients ||
+          b.ingredients ||
+          b.usedIngredients?.concat(b.missedIngredients) || [];
+
+      const aResult = compareIngredients(aIngredients);
+      const bResult = compareIngredients(bIngredients);
+
+      // Calculate scores that balance matches and missing ingredients
+      // NEW CODE: Calculate recipe scores based on matches and missing ingredients
+      const aTotal = aResult.have.length + aResult.need.length;
+      const bTotal = bResult.have.length + bResult.need.length;
+
+      // Avoid division by zero
+      const aScore = aTotal === 0 ? 0 : (aResult.have.length / aTotal) - (aResult.need.length / aTotal * 0.5);
+      const bScore = bTotal === 0 ? 0 : (bResult.have.length / bTotal) - (bResult.need.length / bTotal * 0.5);
+
+      // NEW CODE: Primary sort by composite score
+      if (bScore !== aScore) {
+        return bScore - aScore; // Higher scores first
+      }
+
+      // NEW CODE: If scores are tied, use matches as tiebreaker
+      if (bResult.have.length !== aResult.have.length) {
+        return bResult.have.length - aResult.have.length;
+      }
+
+      // NEW CODE: If matches are tied, use fewer missing ingredients as tiebreaker
+      return aResult.need.length - bResult.need.length;
+    });
+
+    setProcessedRecipes(sortedRecipes);
+  }, [recipes, availableIngredients]);
 
   useEffect(() => {
     const fetchLikedRecipes = async () => {
@@ -100,9 +152,20 @@ export default function RecipeList({ recipes = [], availableIngredients = [] }) 
     }));
   };
 
+  if (processedRecipes.length === 0 && recipes.length > 0) {
+    return (
+        <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+          <p className="text-yellow-700 font-medium mb-2">No recipes with matching ingredients</p>
+          <p className="text-sm text-yellow-600">
+            None of your ingredients matched any recipes. Try adding more ingredients or adjusting your filters.
+          </p>
+        </div>
+    );
+  }
+
   return (
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {recipes.map((recipe) => {
+        {processedRecipes.map((recipe) => {
           const recipeId = recipe.recipeId || recipe.id;
           const { have, need } = compareIngredients(
               recipe.extendedIngredients || recipe.ingredients ||

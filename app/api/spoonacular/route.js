@@ -25,7 +25,6 @@ export async function POST(req) {
         `&addRecipeNutrition=true` +
         `&apiKey=${apiKey}`;
 
-    // ⬇️ ADD: diet and intolerances
     if (dietaryRestrictions.length > 0) {
         // Join multiple with comma (AND logic), or use pipe (|) if you want OR logic
         url += `&diet=${encodeURIComponent(dietaryRestrictions.join(","))}`;
@@ -40,47 +39,57 @@ export async function POST(req) {
     }
 
     try {
-        const res = await fetch(url);
-        const data = await res.json();
+        // 1) Try with the full list of ingredients
+        let data = await (await fetch(url)).json();
 
-        const detailedRecipes = (data.results || []).filter(recipe => {
-            const nutrients = recipe.nutrition?.nutrients || [];
-            const caloriesObj = nutrients.find(n => n.name === "Calories");
-            const carbsObj = nutrients.find(n => n.name === "Carbohydrates");
-
-            const calories = caloriesObj?.amount || 0;
-            const carbs = carbsObj?.amount || 0;
-            const servings = recipe.servings || 0;
-
-            if (maxCalories && calories > maxCalories) return false;
-            if (maxCarbs && carbs > maxCarbs) return false;
-            if (minServings && servings < minServings) return false;
-
-            return true;
-        }).map(recipe => {
-            const calories = recipe.nutrition?.nutrients?.find(n => n.name === "Calories");
-
-            return {
-                recipeId: recipe.id,
-                title: recipe.title,
-                image: recipe.image,
-                url: recipe.sourceUrl,
-                instructions: recipe.analyzedInstructions || [],
-                nutrition: recipe.nutrition?.nutrients || [],
-                calories: calories?.amount ? `${Math.round(calories.amount)} kcal` : "N/A",
-                extendedIngredients: recipe.extendedIngredients || [],
-
-                usedIngredients: recipe.usedIngredients || [],
-                missedIngredients: recipe.missedIngredients || [],
-                usedIngredientCount: recipe.usedIngredientCount || 0,
-                missedIngredientCount: recipe.missedIngredientCount || 0,
-            };
-        });
-
-        if (detailedRecipes.length > 0) {
-            console.log("First recipe usedIngredients:", detailedRecipes[0].usedIngredients);
-            console.log("First recipe missedIngredients:", detailedRecipes[0].missedIngredients);
+        // 2) If no results, try each ingredient on its own
+        if ((!data.results || data.results.length === 0) && ingredients.length > 1) {
+            for (let ingr of ingredients) {
+                const singleUrl = url.replace(
+                    /includeIngredients=[^&]*/,
+                    `includeIngredients=${encodeURIComponent(ingr)}`
+                );
+                const attemptRes = await fetch(singleUrl);
+                const attempt = await attemptRes.json();
+                if (attempt.results && attempt.results.length > 0) {
+                    data = attempt;
+                    break;
+                }
+            }
         }
+
+        const detailedRecipes = (data.results || [])
+            .filter(recipe => {
+                const nutrients = recipe.nutrition?.nutrients || [];
+                const caloriesObj = nutrients.find(n => n.name === "Calories");
+                const carbsObj = nutrients.find(n => n.name === "Carbohydrates");
+                const calories = caloriesObj?.amount || 0;
+                const carbs = carbsObj?.amount || 0;
+                const servings = recipe.servings || 0;
+
+                if (maxCalories && calories > maxCalories) return false;
+                if (maxCarbs && carbs > maxCarbs) return false;
+                if (minServings && servings < minServings) return false;
+                return true;
+            })
+            .map(recipe => {
+                const calories = recipe.nutrition?.nutrients?.find(n => n.name === "Calories");
+                return {
+                    recipeId: recipe.id,
+                    title: recipe.title,
+                    image: recipe.image,
+                    url: recipe.sourceUrl,
+                    instructions: recipe.analyzedInstructions || [],
+                    nutrition: recipe.nutrition?.nutrients || [],
+                    calories: calories?.amount ? `${Math.round(calories.amount)} kcal` : "N/A",
+                    extendedIngredients: recipe.extendedIngredients || [],
+                    usedIngredients: recipe.usedIngredients || [],
+                    missedIngredients: recipe.missedIngredients || [],
+                    usedIngredientCount: recipe.usedIngredientCount || 0,
+                    missedIngredientCount: recipe.missedIngredientCount || 0,
+                };
+            });
+
         return NextResponse.json({ success: true, recipes: detailedRecipes });
     } catch (error) {
         console.error("Spoonacular error:", error);
