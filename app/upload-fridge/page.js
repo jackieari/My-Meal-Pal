@@ -383,9 +383,14 @@ export default function FridgeUploadPage() {
         <main className="container mx-auto px-4 py-8">
           <Link
               href="/home"
-              className="fixed top-20 left-4 md:left-8 bg-white dark:bg-gray-900 shadow-md hover:shadow-lg transition-all rounded-lg px-4 py-2 border border-gray-300 dark:border-gray-700 text-blue-700 dark:text-blue-500 hover:bg-gray-50 dark:hover:bg-gray-800 z-50"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-white text-blue-600 rounded-md shadow hover:bg-blue-50 transition"
           >
-            Back to Home
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd"
+                    d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
+                    clipRule="evenodd"/>
+            </svg>
+            <span className="font-medium">Back to Home</span>
           </Link>
           <div className="mb-12 text-center">
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-3">Fridge Scan</h1>
