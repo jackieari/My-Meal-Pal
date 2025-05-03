@@ -45,8 +45,12 @@ function LandingPage() {
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center">
               <Link href="/" className="flex items-center gap-2">
-                <Zap className="h-6 w-6 text-blue-700 dark:text-blue-500" />
-                <span className="font-bold text-xl">MyMealPal</span>
+                <div className="bg-gradient-to-r from-blue-600 to-blue-800 dark:from-blue-500 dark:to-blue-700 rounded-lg p-1.5">
+                  <Zap className="h-5 w-5 text-white" />
+                </div>
+                <span className="font-bold text-xl bg-gradient-to-r from-blue-700 to-blue-900 dark:from-blue-500 dark:to-blue-400 bg-clip-text text-transparent">
+                  MyMealPal
+                </span>
               </Link>
             </div>
 
@@ -95,8 +99,12 @@ function LandingPage() {
           <div className="fixed inset-y-0 right-0 w-full max-w-xs bg-white dark:bg-gray-900 shadow-lg p-6">
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center gap-2">
-                <Zap className="h-6 w-6 text-blue-700 dark:text-blue-500" />
-                <span className="font-bold text-xl">MealPal</span>
+                <div className="bg-gradient-to-r from-blue-600 to-blue-800 dark:from-blue-500 dark:to-blue-700 rounded-lg p-1.5">
+                  <Zap className="h-5 w-5 text-white" />
+                </div>
+                <span className="font-bold text-xl bg-gradient-to-r from-blue-700 to-blue-900 dark:from-blue-500 dark:to-blue-400 bg-clip-text text-transparent">
+                  MealPal
+                </span>
               </div>
               <button
                 onClick={toggleMobileMenu}
@@ -171,12 +179,7 @@ function LandingPage() {
           </div>
           <div className="md:w-1/2">
             <div className="relative h-64 md:h-96 w-full rounded-xl overflow-hidden shadow-xl border border-gray-300 dark:border-gray-700">
-              <Image
-                src={foodImg} 
-                alt="Meal planning made easy"
-                fill
-                className="object-cover"
-              />
+              <Image src={foodImg || "/placeholder.svg"} alt="Meal planning made easy" fill className="object-cover" />
             </div>
           </div>
         </div>
@@ -309,8 +312,12 @@ function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <Zap className="h-6 w-6 text-blue-700 dark:text-blue-500" />
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white">MealPal</h3>
+                <div className="bg-gradient-to-r from-blue-600 to-blue-800 dark:from-blue-500 dark:to-blue-700 rounded-lg p-1.5">
+                  <Zap className="h-5 w-5 text-white" />
+                </div>
+                <h3 className="text-xl font-bold bg-gradient-to-r from-blue-700 to-blue-900 dark:from-blue-500 dark:to-blue-400 bg-clip-text text-transparent">
+                  MealPal
+                </h3>
               </div>
               <p className="text-gray-600 dark:text-gray-400">
                 Intelligent meal planning for a healthier, simpler life.
