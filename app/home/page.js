@@ -860,7 +860,7 @@ function HomePage() {
             </div>
 
             {/* Weekly Progress */}
-            <div className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-md border border-gray-300 dark:border-gray-700">
+            {/* <div className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-md border border-gray-300 dark:border-gray-700">
               <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Weekly Progress</h2>
 
               <div className="space-y-4">
@@ -894,7 +894,7 @@ function HomePage() {
                   </div>
                 </div>
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
       </main>
