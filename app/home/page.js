@@ -12,6 +12,7 @@ const num = (v) => Number.parseFloat(v)
 function HomePage() {
   const router = useRouter()
   const pathname = usePathname()
+  const [user, setUser] = useState(null) // ← NEW
   const [userName, setUserName] = useState("")
   const [dietaryRestrictions, setDietaryRestrictions] = useState([])
   const [allergens, setAllergens] = useState([])
@@ -57,6 +58,7 @@ function HomePage() {
         })
         if (res.ok) {
           const d = await res.json()
+          setUser(d.user || null) // ← ADD THIS LINE
           setUserName(d.user?.name || "")
           const p = d.user?.nutritionalPreferences || {}
           setDietaryRestrictions(p.dietaryRestrictions || [])
@@ -582,30 +584,39 @@ function HomePage() {
                 <div>
                   <div className="flex justify-between mb-1">
                     <span className="text-sm font-medium text-gray-800 dark:text-gray-200">Protein</span>
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{totals.protein}g</span>
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {totals.protein}g/{user?.nutrionalPreferences?.macros?.protein || "110"}g
+                    </span>
                   </div>
                   <div className="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full">
-                    <div className="h-2.5 bg-blue-600 dark:bg-blue-500 rounded-full" style={{ width: "65%" }}></div>
+                    <div className="h-2.5 bg-blue-600 dark:bg-blue-500 rounded-full" 
+                    style={{ width: `${Math.min(100, (totals.protein / (user?.nutrionalPreferences?.macros?.protein || 110)) * 100)}%` }}></div>
                   </div>
                 </div>
 
                 <div>
                   <div className="flex justify-between mb-1">
                     <span className="text-sm font-medium text-gray-800 dark:text-gray-200">Carbs</span>
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{totals.carbs}g</span>
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      {totals.carbs}g/{user?.nutrionalPreferences?.macros?.carbs || "200"}g
+                      </span>
                   </div>
                   <div className="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full">
-                    <div className="h-2.5 bg-blue-600 dark:bg-blue-500 rounded-full" style={{ width: "40%" }}></div>
+                    <div className="h-2.5 bg-blue-600 dark:bg-blue-500 rounded-full" 
+                    style={{ width: `${Math.min(100, (totals.carbs / (user?.nutrionalPreferences?.macros?.carbs || 110)) * 100)}%` }}></div>
                   </div>
                 </div>
 
                 <div>
                   <div className="flex justify-between mb-1">
                     <span className="text-sm font-medium text-gray-800 dark:text-gray-200">Fat</span>
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{totals.fat}g</span>
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      {totals.fat}g/{user?.nutrionalPreferences?.macros?.fat || "60"}g
+                      </span>
                   </div>
                   <div className="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full">
-                    <div className="h-2.5 bg-blue-600 dark:bg-blue-500 rounded-full" style={{ width: "55%" }}></div>
+                    <div className="h-2.5 bg-blue-600 dark:bg-blue-500 rounded-full" 
+                     style={{ width: `${Math.min(100, (totals.carbs / (user?.nutrionalPreferences?.macros?.fat || 50)) * 100)}%` }}></div>
                   </div>
                 </div>
               </div>
