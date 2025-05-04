@@ -1,6 +1,11 @@
 # My-Meal-Pal
 
+##Visit our Deployed Website
+
 https://my-meal-pal-bh7o.vercel.app/
+
+![image](https://github.com/user-attachments/assets/cacbff13-344e-4c39-b44e-f758bc636c9b)
+
 
 A smart meal planning app that suggests recipes based on fridge ingredients and dietary goals.
 
