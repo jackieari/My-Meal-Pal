@@ -1,8 +1,7 @@
 # My-Meal-Pal
 
 # Visit our Deployed Website
-
-https://my-meal-pal-bh7o.vercel.app/
+## Link: https://my-meal-pal-bh7o.vercel.app/
 
 ![image](https://github.com/user-attachments/assets/cacbff13-344e-4c39-b44e-f758bc636c9b)
 
