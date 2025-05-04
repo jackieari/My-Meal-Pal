@@ -10,7 +10,7 @@ export async function POST(req) {
     const maxCarbs = body.maxCarbs;
     const maxCalories = body.maxCalories;
 
-    const apiKey = "ac4c7b1e98a04d4b98af48492b8af972";  // Replace with env var in production
+    const apiKey = "4f6d6230e6184879a44608721f7c950d";  // Replace with env var in production
     const dietaryRestrictions = body.dietaryRestrictions || [];
     const allergens = body.allergens || [];
 

@@ -40,7 +40,7 @@ export async function POST(request) {
     const recipes = []
 
     // Fetch details for all liked recipes in chunks to avoid API limits
-    const apiKey = process.env.SPOONACULAR_API_KEY || "f1baf1b23e83419c93a5fe9784633292"
+    const apiKey = process.env.SPOONACULAR_API_KEY || "4f6d6230e6184879a44608721f7c950d"
     // Process recipe IDs in chunks of 100 (Spoonacular's limit for bulk requests)
     for (const ids of chunk(recipeIds, 100)) {
       const url = `https://api.spoonacular.com/recipes/informationBulk?ids=${ids.join(",")}&includeNutrition=true&apiKey=${apiKey}`
