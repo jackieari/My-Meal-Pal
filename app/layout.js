@@ -21,7 +21,7 @@ export const metadata = {
   description:
     "Snap a photo of your fridge and let MyMealPal build personalized meal plans.",
   icons: {
-    icon: "/mymealpal.png", // file is in /public
+    icon: "/mymealpal.png", // file is in /public //small push just to check
   },
 };
 
