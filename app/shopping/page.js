@@ -25,7 +25,7 @@ export default function ShoppingListPage() {
   const [selectedProducts, setSelectedProducts] = useState({})
   const [totalCost, setTotalCost] = useState(0)
 
-  const spoonacularApiKey = "4f6d6230e6184879a44608721f7c950d"
+  const spoonacularApiKey = "ef6f679c81d24beb857ec331b318f1f3"
 
   useEffect(() => {
     const fetchUserInfo = async () => {
